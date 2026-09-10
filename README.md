@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-1.0.0-green)](https://git.newchiwan.com/council/spec-kit-pingcode/-/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode-CLI/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [pingcode-cli](https://github.com/metaphor/pingcode-cli) 命令行工具,**不含 MCP 依赖,扩展本身零代码**。

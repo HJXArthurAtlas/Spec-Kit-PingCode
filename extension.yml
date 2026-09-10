@@ -7,9 +7,9 @@ extension:
   version: "1.0.0"
   description: "Create PingCode work item hierarchies from spec-kit artifacts via pingcode-cli"
   author: "ArthurAtlas"
-  repository: "https://git.newchiwan.com/council/spec-kit-pingcode"
+  repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode-CLI"
   license: "MIT"
-  homepage: "https://git.newchiwan.com/council/spec-kit-pingcode"
+  homepage: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode-CLI"
 
 requires:
   speckit_version: ">=0.1.0"
