@@ -168,22 +168,6 @@ sync:
 | 字段发现 | discover-fields(自定义字段) | discover-context(类型/状态/迭代字典) |
 | 状态流转 | transition API | `workitem update --state` |
 
-## 提交规范
-
-本仓库的 GitLab pre-receive 钩子强制校验提交格式与提交者身份:
-
-```text
-<type>(<scope>): #PINGCODE <subject>
-```
-
-- `scope` ≤ 15 字符;**整条提交信息中不要出现括号**(钩子按括号贪心解析,会破坏 scope/subject 切分)
-- subject 必须以 `#PINGCODE` 开头
-- 提交者必须是 GitLab 账号的中文名与邮箱:
-
-```bash
-git config user.name "洪健翔"
-git config user.email "hongjianxiang@newchiwan.com"
-```
 
 ## 许可
 
