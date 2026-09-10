@@ -1,0 +1,54 @@
+---
+schema_version: "1.0"
+
+extension:
+  id: "pingcode"
+  name: "PingCode Integration"
+  version: "1.0.0"
+  description: "Create PingCode work item hierarchies from spec-kit artifacts via pingcode-cli"
+  author: "ArthurAtlas"
+  repository: "https://git.newchiwan.com/council/spec-kit-pingcode"
+  license: "MIT"
+  homepage: "https://git.newchiwan.com/council/spec-kit-pingcode"
+
+requires:
+  speckit_version: ">=0.1.0"
+  # 运行时依赖:pingcode CLI(metaphor/pingcode-cli)
+  #   安装:  https://github.com/metaphor/pingcode-cli
+  #   认证:  pingcode auth login(或 PINGCODE_CLIENT_ID/SECRET 环境变量)
+  #   上下文: pingcode context set-current-project <项目名>
+  # 扩展本身不含任何代码,所有 PingCode 操作由 agent 通过 bash 执行 pingcode 命令完成。
+
+provides:
+  commands:
+    - name: "speckit.pingcode.specstoissues"
+      file: "commands/specstoissues.md"
+      description: "Create PingCode work item hierarchy from spec and tasks"
+      aliases: ["speckit.pingcode.spec2items"]
+
+    - name: "speckit.pingcode.discover-context"
+      file: "commands/discover-context.md"
+      description: "Discover PingCode project types/states/sprints and generate config snippets"
+
+    - name: "speckit.pingcode.sync-status"
+      file: "commands/sync-status.md"
+      description: "Sync local task completion status to PingCode"
+
+  config:
+    - name: "pingcode-config.yml"
+      template: "pingcode-config.template.yml"
+      description: "PingCode integration configuration"
+      required: true
+
+hooks:
+  after_tasks:
+    command: "speckit.pingcode.specstoissues"
+    optional: true
+    prompt: "将任务同步为 PingCode 工作项?"
+    description: "在 /speckit.tasks 生成后可选自动创建 PingCode 层级"
+
+tags:
+  - "issue-tracking"
+  - "pingcode"
+  - "project-management"
+  - "cli"

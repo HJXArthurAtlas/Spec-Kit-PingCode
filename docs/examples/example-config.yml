@@ -1,0 +1,29 @@
+# 示例:接入 "网运通项目组"(WYT)的完整配置
+# 项目工作项类型:史诗(epic)/ 特性(feature)/ 用户故事(story)/ 任务(task)/ 缺陷(bug)
+# 迭代:正常迭代分组下的 Sprint N
+
+project: "网运通项目组"       # 或 "WYT"
+sprint: ""                    # 留空:每次运行自动选进行中的迭代,多个时询问
+
+mapping:
+  spec_artifact: "用户故事"    # 一个 spec = 一张可交付的 story 卡
+  phase_artifact: ""           # Phase 嵌入 story 描述(2 层模式)
+  task_artifact: "任务"        # 任务行建为任务工作项,--parent 挂 story
+
+defaults:
+  spec:
+    priority: ""               # 可填 "中" / "高"
+  task:
+    priority: ""
+
+status_mapping:
+  completed: "已完成"
+  pending: "未开始"
+  in_progress: "进行中"
+
+sync:
+  complete_story_when_tasks_done: true
+
+# 3 层模式示例(Phase 建独立工作项):把 phase_artifact 改为:
+#   phase_artifact: "特性"
+# 此时层级为 用户故事 → 特性 → 任务

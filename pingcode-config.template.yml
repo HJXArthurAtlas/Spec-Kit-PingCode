@@ -1,0 +1,59 @@
+# PingCode Integration Configuration
+# 复制为 pingcode-config.yml 并按你的项目定制:
+#   cp .specify/extensions/pingcode/pingcode-config.template.yml \
+#      .specify/extensions/pingcode/pingcode-config.yml
+
+# PingCode 项目(必填)
+# 支持项目名或项目标识符,如 "网运通项目组" 或 "WYT"
+# 运行时通过 `pingcode context set-current-project` 解析为 project_id
+project: ""
+
+# 迭代(可选,留空 = 每次运行动态解析)
+# 解析优先级:--sprint 命令参数 > 此处 > context 当前迭代 > sprint list --status in_progress 自动/询问
+sprint: ""
+
+# 制品 → 工作项类型映射
+# 类型名以项目实际配置为准,可用 /speckit.pingcode.discover-context 查询
+mapping:
+  # SPEC.md 映射的工作项类型(默认用户故事:一个 spec 是一个可交付闭环)
+  spec_artifact: "用户故事"
+
+  # Phase 标题映射的工作项类型
+  # 留空 "" = 2 层模式:Phase 作为分组 checklist 嵌入 story 描述(推荐)
+  # 设为 "特性" 等类型名 = 3 层模式:Phase 建独立工作项
+  phase_artifact: ""
+
+  # 任务行映射的工作项类型
+  # 设为 "" = 极简模式:任务只存在于 story 描述的 checklist 中,不建工作项
+  task_artifact: "任务"
+
+# 默认值(可选)
+defaults:
+  spec:
+    priority: ""   # 如 "中" / "高",留空不设置
+  task:
+    priority: ""
+
+# 状态映射(sync-status 使用)
+# 将 TASKS.md 完成标记映射到 PingCode 状态名
+# 状态名按项目可配置;执行时若名称不匹配,按 state_type
+# (completed/started/pending)兜底解析
+status_mapping:
+  completed: "已完成"       # - [x]
+  pending: "未开始"         # - [ ]
+  in_progress: "进行中"     # - [~](可选约定)
+
+# 同步行为
+sync:
+  # 任务全部完成后,是否将 story 自动流转到完成态
+  complete_story_when_tasks_done: true
+
+# 环境变量覆盖(优先级高于本文件):
+#   SPECKIT_PINGCODE_PROJECT
+#   SPECKIT_PINGCODE_SPRINT
+#   SPECKIT_PINGCODE_SPEC_ARTIFACT
+#   SPECKIT_PINGCODE_PHASE_ARTIFACT
+#   SPECKIT_PINGCODE_TASK_ARTIFACT
+#   SPECKIT_PINGCODE_STATUS_COMPLETED
+#   SPECKIT_PINGCODE_STATUS_PENDING
+#   SPECKIT_PINGCODE_STATUS_IN_PROGRESS
