@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode-CLI/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [pingcode-cli](https://github.com/metaphor/pingcode-cli) 命令行工具,**不含 MCP 依赖,扩展本身零代码**。
+将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [pingcode-cli](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
 
 ## 功能
 
@@ -27,12 +27,15 @@
 ## 安装
 
 ```bash
-# 在 spec-kit 项目内
-specify extension add pingcode
+# 在 spec-kit 项目内,从 Release 归档安装
+specify extension add pingcode-cli \
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode-CLI/releases/download/v1.0.0/pingcode-cli-1.0.0.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
 ```
+
+> spec-kit 社区目录为 discovery-only(仅搜索发现、不支持按名安装),故始终通过 `--from` 指定 Release 归档安装。
 
 ## 快速开始
 
@@ -43,19 +46,19 @@ specify extension add --dev /path/to/spec-kit-pingcode
 /speckit.tasks
 
 # 1. 配置(复制模板,填 project)
-cp .specify/extensions/pingcode/pingcode-config.template.yml \
-   .specify/extensions/pingcode/pingcode-config.yml
+cp .specify/extensions/pingcode-cli/pingcode-config.template.yml \
+   .specify/extensions/pingcode-cli/pingcode-config.yml
 
 # 2. (可选)探查项目字典,校准类型/状态名
-/speckit.pingcode.discover-context
+/speckit.pingcode-cli.discover-context
 
 # 3. 创建 PingCode 工作项层级
-/speckit.pingcode.specstoissues
+/speckit.pingcode-cli.specstoissues
 
 # 4. 本地实施,勾选 tasks.md 中的任务
 
 # 5. 同步完成状态到 PingCode
-/speckit.pingcode.sync-status
+/speckit.pingcode-cli.sync-status
 ```
 
 ## 层级映射
@@ -74,39 +77,39 @@ SPEC.md (# 标题 + 正文)   →  用户故事(Story)      ← 迭代挂在这�
 
 ## 命令
 
-### `/speckit.pingcode.specstoissues`
+### `/speckit.pingcode-cli.specstoissues`
 
 从 spec 与 tasks 创建完整 PingCode 层级,写映射文件 `specs/<spec-name>/pingcode-mapping.json`。
 
 ```bash
-/speckit.pingcode.specstoissues                          # 自动检测 spec
-/speckit.pingcode.specstoissues --spec 001-user-auth     # 指定 spec
-/speckit.pingcode.specstoissues --sprint "Sprint 22"     # 指定迭代
-/speckit.pingcode.specstoissues --dry-run                # 只看创建计划
+/speckit.pingcode-cli.specstoissues                          # 自动检测 spec
+/speckit.pingcode-cli.specstoissues --spec 001-user-auth     # 指定 spec
+/speckit.pingcode-cli.specstoissues --sprint "Sprint 22"     # 指定迭代
+/speckit.pingcode-cli.specstoissues --dry-run                # 只看创建计划
 ```
 
 spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯一 spec。
 
 **迭代解析链**:`--sprint` 参数 > config 的 `sprint` > context 当前迭代 > `sprint list --status in_progress`(唯一命中自动选,多个列出询问,零个询问是否挂迭代)。解析结果写入映射文件,sync 不再重复询问。
 
-### `/speckit.pingcode.discover-context`
+### `/speckit.pingcode-cli.discover-context`
 
 探查项目的类型/状态/优先级/迭代字典,输出可粘贴的配置片段,存 `discovered-context.json`。首次接入或类型/状态名对不上时运行。
 
-### `/speckit.pingcode.sync-status`
+### `/speckit.pingcode-cli.sync-status`
 
 将 `tasks.md` 的完成标记同步为 PingCode 状态流转,全完成后收尾 story,写日志 `pingcode-sync-log.json`。
 
 ```bash
-/speckit.pingcode.sync-status              # 自动检测
-/speckit.pingcode.sync-status --dry-run    # 只看流转计划
+/speckit.pingcode-cli.sync-status              # 自动检测
+/speckit.pingcode-cli.sync-status --dry-run    # 只看流转计划
 ```
 
 **方向性规则**:本地 → PingCode 单向执行。本地勾选而远端未完成 → 流转;远端已推进而本地未勾选 → 不回退,仅记入差异报告由人工确认。
 
 ## 配置
 
-`.specify/extensions/pingcode/pingcode-config.yml`(模板:`pingcode-config.template.yml`):
+`.specify/extensions/pingcode-cli/pingcode-config.yml`(模板:`pingcode-config.template.yml`):
 
 ```yaml
 project: "网运通项目组"        # 必填,项目名或标识符
@@ -116,6 +119,12 @@ mapping:
   spec_artifact: "用户故事"    # SPEC.md 的映射类型
   phase_artifact: ""           # 空=嵌入描述;设为特性类型名启用 3 层
   task_artifact: "任务"        # 空=极简模式
+
+defaults:
+  spec:
+    priority: ""                 # 如 "中" / "高",留空不设置
+  task:
+    priority: ""
 
 status_mapping:
   completed: "已完成"          # - [x]
@@ -144,7 +153,7 @@ sync:
 |---|---|
 | `specs/<name>/pingcode-mapping.json` | spec/任务 ↔ 工作项的映射,specstoissues 写入、sync-status 消费 |
 | `specs/<name>/pingcode-sync-log.json` | 每次同步的流转/差异/进度记录 |
-| `.specify/extensions/pingcode/discovered-context.json` | 项目字典探查结果 |
+| `.specify/extensions/pingcode-cli/discovered-context.json` | 项目字典探查结果 |
 
 ## 故障排除
 
@@ -154,8 +163,8 @@ sync:
 | `authenticated: false` | `pingcode auth login`,或配置 client 凭证环境变量 |
 | workspace context 报错 | `pingcode context set-current-project "<项目名>"` |
 | `No cached sprint matched` / 创建要求 current_user_id、current_sprint_id | 迭代字典未填充:管道驱动一次 `pingcode context init`(项目→迭代→用户),再 `context set-current-sprint <ID>`;用户用 `pingcode directory me` 取 ID 后 `set-current-user` |
-| 类型名/状态名不识别 | 运行 `/speckit.pingcode.discover-context`,按实际名称修正配置 |
-| HTTP 429 | CLI 有 `x-pingcode` 限流提示,按提示等待后重试 |
+| 类型名/状态名不识别 | 运行 `/speckit.pingcode-cli.discover-context`,按实际名称修正配置 |
+| HTTP 429 | CLI 返回 `x-pc-retry-after` 响应头,按其指示等待后重试 |
 | 重复工作项 | 检查 `pingcode-mapping.json`;重跑时选"补建"而非"重建" |
 
 ## 与 spec-kit-jira 的差异

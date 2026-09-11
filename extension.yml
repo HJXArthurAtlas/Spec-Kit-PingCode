@@ -2,7 +2,7 @@
 schema_version: "1.0"
 
 extension:
-  id: "pingcode"
+  id: "pingcode-cli"
   name: "PingCode Integration"
   version: "1.0.0"
   description: "Create PingCode work item hierarchies from spec-kit artifacts via pingcode-cli"
@@ -21,16 +21,16 @@ requires:
 
 provides:
   commands:
-    - name: "speckit.pingcode.specstoissues"
+    - name: "speckit.pingcode-cli.specstoissues"
       file: "commands/specstoissues.md"
       description: "Create PingCode work item hierarchy from spec and tasks"
-      aliases: ["speckit.pingcode.spec2items"]
+      aliases: ["speckit.pingcode-cli.spec2items"]
 
-    - name: "speckit.pingcode.discover-context"
+    - name: "speckit.pingcode-cli.discover-context"
       file: "commands/discover-context.md"
       description: "Discover PingCode project types/states/sprints and generate config snippets"
 
-    - name: "speckit.pingcode.sync-status"
+    - name: "speckit.pingcode-cli.sync-status"
       file: "commands/sync-status.md"
       description: "Sync local task completion status to PingCode"
 
@@ -42,7 +42,7 @@ provides:
 
 hooks:
   after_tasks:
-    command: "speckit.pingcode.specstoissues"
+    command: "speckit.pingcode-cli.specstoissues"
     optional: true
     prompt: "将任务同步为 PingCode 工作项?"
     description: "在 /speckit.tasks 生成后可选自动创建 PingCode 层级"

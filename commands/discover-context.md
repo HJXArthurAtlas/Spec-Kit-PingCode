@@ -9,7 +9,7 @@ description: "发现 PingCode 项目的类型/状态/迭代字典,生成配置�
 ## 前置条件
 
 1. `pingcode` CLI 已安装且已认证
-2. 配置文件 `.specify/extensions/pingcode/pingcode-config.yml` 存在,且 `project` 已填写(或通过环境变量 `SPECKIT_PINGCODE_PROJECT` 提供)
+2. 配置文件 `.specify/extensions/pingcode-cli/pingcode-config.yml` 存在,且 `project` 已填写(或通过环境变量 `SPECKIT_PINGCODE_PROJECT` 提供)
 
 ## 用户输入
 
@@ -82,7 +82,7 @@ pingcode sprint list <project_id> --status completed
 基于发现的真实名称,输出推荐配置(状态取每个 state_type 的第一个,并提示可替换):
 
 ```yaml
-# 建议粘贴到 .specify/extensions/pingcode/pingcode-config.yml
+# 建议粘贴到 .specify/extensions/pingcode-cli/pingcode-config.yml
 project: "<项目名>"
 
 mapping:
@@ -100,7 +100,7 @@ status_mapping:
 
 ### 7. 保存探查结果
 
-写 `.specify/extensions/pingcode/discovered-context.json`:
+写 `.specify/extensions/pingcode-cli/discovered-context.json`:
 
 ```json
 {
@@ -115,4 +115,4 @@ status_mapping:
 }
 ```
 
-结尾提示:把片段合入 `pingcode-config.yml` 后,即可运行 `/speckit.pingcode.specstoissues`。
+结尾提示:把片段合入 `pingcode-config.yml` 后,即可运行 `/speckit.pingcode-cli.specstoissues`。
