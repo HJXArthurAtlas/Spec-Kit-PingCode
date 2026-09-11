@@ -11,7 +11,7 @@ description: "将本地任务完成状态同步到 PingCode 工作项"
 ## 前置条件
 
 1. `pingcode` CLI 已安装且已认证
-2. 工作项已通过 `/speckit.pingcode-cli.specstoissues` 创建
+2. 工作项已通过 `/speckit.pingcode.specstoissues` 创建
 3. 映射文件存在:`specs/<spec-name>/pingcode-mapping.json`
 4. `tasks.md` 中有完成标记
 
@@ -32,7 +32,7 @@ $ARGUMENTS
 1. `--spec <name>` 参数
 2. git 分支名匹配且存在 `specs/<分支名>/pingcode-mapping.json`
 3. 当前目录在 `specs/<name>/` 内
-4. `specs/` 下恰有一个含 `pingcode-mapping.json` 的 spec;多个则列出让用户选择,0 个则报错提示先运行 `/speckit.pingcode-cli.specstoissues`
+4. `specs/` 下恰有一个含 `pingcode-mapping.json` 的 spec;多个则列出让用户选择,0 个则报错提示先运行 `/speckit.pingcode.specstoissues`
 
 ### 2. 环境自检与配置加载
 

@@ -16,7 +16,7 @@ description: "将 spec-kit 的 spec 和 tasks 转换为 PingCode 工作项层级
 
 1. `pingcode` CLI 已安装且在 PATH 中(安装:https://github.com/metaphor/pingcode-cli )
 2. 已完成认证:`pingcode auth status` 显示 `authenticated: true` 且 `token_valid: true`
-3. 扩展配置文件存在:`.specify/extensions/pingcode-cli/pingcode-config.yml`
+3. 扩展配置文件存在:`.specify/extensions/pingcode/pingcode-config.yml`
 4. spec 目录存在且包含 `spec.md` 和 `tasks.md`
 
 任何一项不满足 → 停止并按"故障排除"一节给出指引,不要继续。
@@ -79,7 +79,7 @@ printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 
 ### 3. 加载配置
 
-读取 `.specify/extensions/pingcode-cli/pingcode-config.yml`(不存在则提示从 `pingcode-config.template.yml` 复制并填写 `project`,终止)。
+读取 `.specify/extensions/pingcode/pingcode-config.yml`(不存在则提示从 `pingcode-config.template.yml` 复制并填写 `project`,终止)。
 
 按以下优先级合并(高 → 低):环境变量 > config 文件 > 内置默认。
 
@@ -124,7 +124,7 @@ printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 - `mapping.phase_artifact` → phase_type_id(3 层模式)
 - `mapping.task_artifact` → task_type_id(非极简模式)
 
-任一名称匹配失败 → 终止,引导运行 `/speckit.pingcode-cli.discover-context` 查看该项目实际类型名,修正配置后重试。**禁止用不存在的类型名调用创建接口。**
+任一名称匹配失败 → 终止,引导运行 `/speckit.pingcode.discover-context` 查看该项目实际类型名,修正配置后重试。**禁止用不存在的类型名调用创建接口。**
 
 ### 6. 解析 SPEC.md
 
@@ -301,7 +301,7 @@ Story: <identifier> - <标题>
 映射: specs/<name>/pingcode-mapping.json
 
 后续:
-  • 本地完成任务的勾选后运行 /speckit.pingcode-cli.sync-status 同步状态
+  • 本地完成任务的勾选后运行 /speckit.pingcode.sync-status 同步状态
 ═══════════════════════════════════════════
 ```
 
@@ -312,7 +312,7 @@ Story: <identifier> - <标题>
 | `command not found: pingcode` | 按 https://github.com/metaphor/pingcode-cli 安装 CLI |
 | `authenticated: false` | 运行 `pingcode auth login`,或设置 `PINGCODE_CLIENT_ID`/`PINGCODE_CLIENT_SECRET` |
 | workspace context 报错 | 运行 `pingcode context set-current-project "<项目名>"` |
-| 类型名匹配失败 | 运行 `/speckit.pingcode-cli.discover-context` 查看实际类型名 |
+| 类型名匹配失败 | 运行 `/speckit.pingcode.discover-context` 查看实际类型名 |
 | 状态名不识别 | 用缓存字典里的真实状态名;或按 `state_type` 兜底 |
 | HTTP 429 | 等待 `x-pc-retry-after` 秒后重试 |
 | 项目下无进行中迭代 | 询问用户指定迭代或不挂迭代 |

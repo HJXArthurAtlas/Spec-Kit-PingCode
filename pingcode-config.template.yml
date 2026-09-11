@@ -1,7 +1,7 @@
 # PingCode Integration Configuration
 # 复制为 pingcode-config.yml 并按你的项目定制:
-#   cp .specify/extensions/pingcode-cli/pingcode-config.template.yml \
-#      .specify/extensions/pingcode-cli/pingcode-config.yml
+#   cp .specify/extensions/pingcode/pingcode-config.template.yml \
+#      .specify/extensions/pingcode/pingcode-config.yml
 
 # PingCode 项目(必填)
 # 支持项目名或项目标识符,如 "网运通项目组" 或 "WYT"
@@ -13,7 +13,7 @@ project: ""
 sprint: ""
 
 # 制品 → 工作项类型映射
-# 类型名以项目实际配置为准,可用 /speckit.pingcode-cli.discover-context 查询
+# 类型名以项目实际配置为准,可用 /speckit.pingcode.discover-context 查询
 mapping:
   # SPEC.md 映射的工作项类型(默认用户故事:一个 spec 是一个可交付闭环)
   spec_artifact: "用户故事"
