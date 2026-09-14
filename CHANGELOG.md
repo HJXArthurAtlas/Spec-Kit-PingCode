@@ -5,6 +5,15 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.1.0] - 2026-09-14
+
+### Added
+
+- `specstoissues` 支持 story 关联 Epic/Feature:创建 story 前交互选择史诗与特性,
+  以 `--parent` 挂到特性下(呈现 史诗 → 特性 → 用户故事 完整层级);无特性时可直接挂史诗,
+  也可选择不关联。新增 `--epic`/`--feature` 参数(按名称/identifier/id 精确匹配)跳过交互;
+  补建模式下 story 已存在时跳过选择;映射文件结构不变。
+
 ## [1.0.1] - 2026-09-14
 
 ### Changed

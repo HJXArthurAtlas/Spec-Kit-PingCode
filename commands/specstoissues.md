@@ -9,6 +9,7 @@ description: "将 spec-kit 的 spec 和 tasks 转换为 PingCode 工作项层级
 - **SPEC.md** → Story(用户故事,或 config 指定的类型)
 - **TASKS.md 的 `## Phase N:` 标题** → 默认不建工作项,作为分组 checklist 嵌入 story 描述(2 层模式);config 启用时建独立工作项(3 层模式)
 - **任务行 `- [ ] T001 ...`** → Task 工作项,`--parent` 挂到 story
+- **可选需求树关联**:story 创建时交互选择 Epic/Feature 并 `--parent` 挂接,呈现 史诗 → 特性 → 用户故事 层级
 
 所有操作通过 bash 执行 `pingcode` CLI 完成。**严格遵守:禁止猜测任何 ID;所有名称先解析为 ID 再执行写操作。**
 
@@ -28,6 +29,8 @@ $ARGUMENTS
 支持的可选参数:
 - `--spec <name>`:指定 spec 目录名;缺省时自动检测
 - `--sprint <名称或ID>`:指定迭代;缺省时走迭代解析链
+- `--epic <名称/identifier/ID>`:指定关联的史诗;缺省时交互选择
+- `--feature <名称/identifier/ID>`:指定关联的特性;缺省时在所选史诗下交互选择
 - `--dry-run`:只输出将要执行的创建计划,不实际调用写接口
 
 ## 步骤
@@ -150,7 +153,37 @@ printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 
 默认建议补建。不存在映射文件则直接继续。
 
-### 9. 创建 Story
+### 9. 选择 Epic 与 Feature 关联(交互)
+
+story 卡通过 `--parent` 挂到 Feature(或 Epic)下,PingCode 即呈现完整需求层级:史诗 → 特性 → 用户故事。映射文件结构不变,关联关系在每次创建 story 时确定。
+
+**前置**:第 8 步选择了"补建"且 story 已存在(有 identifier)→ 跳过本步,沿用远端现有挂接。
+
+1. 确定类型名:默认按 `史诗` / `特性`;若缓存 `work_item_types["<project_id>"].values[]` 中无此名,列出 `group=requirement` 的实际类型让用户指认,或选择跳过关联。
+2. 选择史诗:
+
+```bash
+pingcode workitem list --type <epic 类型名> --project <project_id> --limit 100
+```
+
+   展示 `identifier + title` 清单让用户选择,取所选项 `values[].id` 为 epic_id。列表为空 → 告知并询问:跳过关联或中止。
+3. 选择特性:
+
+```bash
+pingcode workitem list --type <feature 类型名> --project <project_id> --limit 100
+```
+
+   在输出 `values[]` 中筛 `parent_id === <epic_id>` 的条目展示;筛完为空 → 展示项目全部特性并注明"无直接挂在所选史诗下的特性";项目无任何特性 → 询问:直接挂 Epic 或跳过。
+4. 确定挂接目标:
+   - 选定特性 → `parent_ref = 特性 id`(Epic 经父子链隐式关联)
+   - 直接挂史诗(仅无特性可用时提供) → `parent_ref = epic_id`
+   - 不关联 → 创建 story 时省略 `--parent`
+
+`--epic` / `--feature` 参数:在上述 list 输出中按名称、identifier 或 id 精确匹配,命中即跳过对应交互;`--feature` 命中但其 `parent_id` 与所选史诗不一致时回显两者,让用户确认。**`--parent` 只接受 list 输出的 `id`**(CLI 不解析 identifier)。
+
+`--dry-run`:在创建计划中回显 `关联: <epic identifier> - <标题> / <feature identifier> - <标题>`,不执行创建。
+
+### 10. 创建 Story
 
 先组装描述(2 层模式在此嵌入任务清单,3 层模式只列 phase 清单):
 
@@ -182,10 +215,11 @@ pingcode workitem create \
   --project <project_id> \
   --sprint <sprint_id> \
   --priority "<config.defaults.spec.priority>" \
+  --parent <parent_ref,第 9 步解析结果> \
   --description "$desc"
 ```
 
-(`--priority`/`--sprint` 按解析结果省略可选项。)
+(`--priority`/`--sprint`/`--parent` 按解析结果省略可选项;"不关联"时省略 `--parent`。)
 
 从 JSON 输出提取 `id`、`identifier`、`html_url` 并回显:
 
@@ -194,7 +228,7 @@ pingcode workitem create \
    <html_url>
 ```
 
-### 10. 创建 Phase 工作项(仅 3 层模式)
+### 11. 创建 Phase 工作项(仅 3 层模式)
 
 对每个 Phase:
 
@@ -210,7 +244,7 @@ pingcode workitem create \
 
 2 层模式跳过本步。
 
-### 11. 创建任务工作项(极简模式跳过)
+### 12. 创建任务工作项(极简模式跳过)
 
 **逐个任务**执行,父级按模式取 story_id(2 层)或 phase_id(3 层):
 
@@ -241,7 +275,7 @@ Local status: pending"
   └── ...
 ```
 
-### 12. 写入映射文件
+### 13. 写入映射文件
 
 写 `specs/<name>/pingcode-mapping.json`:
 
@@ -288,7 +322,7 @@ Local status: pending"
 }
 ```
 
-### 13. 输出总结
+### 14. 输出总结
 
 ```
 ═══════════════════════════════════════════
@@ -297,6 +331,7 @@ Local status: pending"
 项目: <项目名>    迭代: <迭代名/未挂>
 Story: <identifier> - <标题>
   <url>
+关联: <epic identifier> - <标题> → <feature identifier> - <标题>(未关联时省略本行)
 任务: 创建 <n> 个,失败 <m> 个
 映射: specs/<name>/pingcode-mapping.json
 
@@ -314,6 +349,7 @@ Story: <identifier> - <标题>
 | workspace context 报错 | 运行 `pingcode context set-current-project "<项目名>"` |
 | 仓库子目录里执行命令后上下文丢失 | CLI 已将相对缓存路径锚定到 git 仓库根(metaphor/pingcode-cli bd4977f 起);旧版 CLI 需在仓库根执行,或将 `PINGCODE_WORKSPACE_CACHE` 设为绝对路径 |
 | 类型名匹配失败 | 运行 `/speckit.pingcode.discover-context` 查看实际类型名 |
+| 特性与史诗挂接不符 | list 输出的特性 `parent_id` 未指向所选史诗时,展示全部特性由用户确认;挂错可用 `pingcode workitem update <id> --parent <id>` 调整 |
 | 状态名不识别 | 用缓存字典里的真实状态名;或按 `state_type` 兜底 |
 | HTTP 429 | 等待 `x-pc-retry-after` 秒后重试 |
 | 项目下无进行中迭代 | 询问用户指定迭代或不挂迭代 |

@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-1.0.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -12,6 +12,7 @@
 - **3 层模式(可选)**:Phase 建独立工作项(SPEC → Phase → 任务)
 - **极简模式(可选)**:只建 story,任务以 checklist 存在于描述中
 - **原生父子挂接**:PingCode `--parent` 参数,无需链接字段配置
+- **Epic/Feature 关联**:创建 story 前交互选择史诗与特性(`--epic`/`--feature` 可跳过交互),story `--parent` 挂特性之下,呈现 史诗 → 特性 → 用户故事 完整层级;可选择直接挂史诗或跳过
 - **上下文发现**:探查项目的类型/状态/迭代字典,生成配置片段
 - **状态同步**:本地 `[x]`/`[~]`/`[ ]` 标记 → PingCode 状态流转,任务全完成自动收尾 story
 - **灵活迭代**:迭代不写死,运行时按解析链确定(参数 > 配置 > 上下文 > 自动发现/询问)
@@ -29,7 +30,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v1.0.0/pingcode-1.0.0.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v1.1.0/pingcode-1.1.0.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -64,6 +65,7 @@ cp .specify/extensions/pingcode/pingcode-config.template.yml \
 ## 层级映射
 
 ```text
+史诗(Epic) → 特性(Feature)  ← 运行时交互选择(或 --epic/--feature 指定),story --parent 挂特性下
 SPEC.md (# 标题 + 正文)   →  用户故事(Story)      ← 迭代挂在这一层
   │
   ├─ ## Phase N 标题      →  (默认)嵌入 story 描述的分组 checklist
@@ -85,12 +87,15 @@ SPEC.md (# 标题 + 正文)   →  用户故事(Story)      ← 迭代挂在这�
 /speckit.pingcode.specstoissues                          # 自动检测 spec
 /speckit.pingcode.specstoissues --spec 001-user-auth     # 指定 spec
 /speckit.pingcode.specstoissues --sprint "Sprint 22"     # 指定迭代
+/speckit.pingcode.specstoissues --epic "平台基建" --feature "认证体系"  # 指定关联,跳过交互
 /speckit.pingcode.specstoissues --dry-run                # 只看创建计划
 ```
 
 spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯一 spec。
 
 **迭代解析链**:`--sprint` 参数 > config 的 `sprint` > context 当前迭代 > `sprint list --status in_progress`(唯一命中自动选,多个列出询问,零个询问是否挂迭代)。解析结果写入映射文件,sync 不再重复询问。
+
+**Epic/Feature 关联**:创建 story 前交互选择史诗与特性,story 以 `--parent` 挂到特性下(Epic 经父子链隐式关联;无特性时可直接挂史诗,或选择不关联)。`--epic`/`--feature` 按名称/identifier/id 精确匹配,可跳过交互。映射文件结构不变。
 
 ### `/speckit.pingcode.discover-context`
 
