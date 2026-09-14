@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [pingcode-cli](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
+将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
 
 ## 功能
 
@@ -159,7 +159,7 @@ sync:
 
 | 症状 | 处理 |
 |---|---|
-| `command not found: pingcode` | 安装 [pingcode-cli](https://github.com/metaphor/pingcode-cli) 并确认在 PATH |
+| `command not found: pingcode` | 安装 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 并确认在 PATH |
 | `authenticated: false` | `pingcode auth login`,或配置 client 凭证环境变量 |
 | workspace context 报错 | `pingcode context set-current-project "<项目名>"` |
 | `No cached sprint matched` / 创建要求 current_user_id、current_sprint_id | 迭代字典未填充:管道驱动一次 `pingcode context init`(项目→迭代→用户),再 `context set-current-sprint <ID>`;用户用 `pingcode directory me` 取 ID 后 `set-current-user` |
@@ -167,16 +167,9 @@ sync:
 | HTTP 429 | CLI 返回 `x-pc-retry-after` 响应头,按其指示等待后重试 |
 | 重复工作项 | 检查 `pingcode-mapping.json`;重跑时选"补建"而非"重建" |
 
-## 与 spec-kit-jira 的差异
+## 参考
 
-| | spec-kit-jira | spec-kit-pingcode |
-|---|---|---|
-| 交互层 | Jira MCP server 工具调用 | `pingcode` CLI bash 命令 |
-| 默认层级 | Epic → Story → Task(3 层) | Story → Task(2 层),Phase 嵌入描述 |
-| 父子挂接 | Epic Link / Parent / 关系链接 | `--parent` 参数 |
-| 字段发现 | discover-fields(自定义字段) | discover-context(类型/状态/迭代字典) |
-| 状态流转 | transition API | `workitem update --state` |
-
+[Spec Kit Jira](https://github.com/mbachorik/spec-kit-jira)
 
 ## 许可
 
