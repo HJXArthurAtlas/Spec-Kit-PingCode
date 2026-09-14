@@ -5,6 +5,14 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [1.0.1] - 2026-09-14
+
+### Changed
+
+- `specstoissues` 故障排除表新增「仓库子目录里执行命令后上下文丢失」条目:
+  pingcode CLI 自 bd4977f 起将相对缓存路径锚定到 git 仓库根,旧版 CLI 需在仓库根执行
+  或将 `PINGCODE_WORKSPACE_CACHE` 设为绝对路径。
+
 ## [1.0.0] - 2026-09-10
 
 ### Added

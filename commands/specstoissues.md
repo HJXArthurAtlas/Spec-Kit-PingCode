@@ -312,6 +312,7 @@ Story: <identifier> - <标题>
 | `command not found: pingcode` | 按 https://github.com/metaphor/pingcode-cli 安装 CLI |
 | `authenticated: false` | 运行 `pingcode auth login`,或设置 `PINGCODE_CLIENT_ID`/`PINGCODE_CLIENT_SECRET` |
 | workspace context 报错 | 运行 `pingcode context set-current-project "<项目名>"` |
+| 仓库子目录里执行命令后上下文丢失 | CLI 已将相对缓存路径锚定到 git 仓库根(metaphor/pingcode-cli bd4977f 起);旧版 CLI 需在仓库根执行,或将 `PINGCODE_WORKSPACE_CACHE` 设为绝对路径 |
 | 类型名匹配失败 | 运行 `/speckit.pingcode.discover-context` 查看实际类型名 |
 | 状态名不识别 | 用缓存字典里的真实状态名;或按 `state_type` 兜底 |
 | HTTP 429 | 等待 `x-pc-retry-after` 秒后重试 |
