@@ -1,20 +1,20 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-1.1.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.0.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物(SPEC.md + TASKS.md)转换为 PingCode 工作项层级,并把本地任务完成状态回写到 PingCode。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
 
 ## 功能
 
-- **层级转换**:SPEC.md → 用户故事,Phase → story 描述中的分组 checklist(2 层模式,默认),任务行 → 任务工作项
-- **3 层模式(可选)**:Phase 建独立工作项(SPEC → Phase → 任务)
-- **极简模式(可选)**:只建 story,任务以 checklist 存在于描述中
+- **层级转换**:SPEC.md → 用户故事,Phase/User Story 章节嵌入描述作分组 checklist(单卡模式,默认),任务行 → 任务工作项
+- **按章节模式(可选)**:spec.md 的每个 `### User Story N` 章节各建一张卡,任务按 `[US#]` 标记挂到所属卡,优先级按章节 `P1/P2/P3` 映射
+- **极简模式(可选)**:只建卡,任务以 checklist 存在于描述中
 - **原生父子挂接**:PingCode `--parent` 参数,无需链接字段配置
 - **Epic/Feature 关联**:创建 story 前交互选择史诗与特性(`--epic`/`--feature` 可跳过交互),story `--parent` 挂特性之下,呈现 史诗 → 特性 → 用户故事 完整层级;可选择直接挂史诗或跳过
 - **上下文发现**:探查项目的类型/状态/迭代字典,生成配置片段
-- **状态同步**:本地 `[x]`/`[~]`/`[ ]` 标记 → PingCode 状态流转,任务全完成自动收尾 story
+- **状态同步**:本地 `[x]`/`[~]`/`[ ]` 标记 → PingCode 状态流转,各卡任务全完成逐卡收尾 story
 - **灵活迭代**:迭代不写死,运行时按解析链确定(参数 > 配置 > 上下文 > 自动发现/询问)
 - **幂等防护**:已有映射文件时提供补建/重建/中止选项
 
@@ -30,7 +30,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v1.1.0/pingcode-1.1.0.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.0.0/pingcode-2.0.0.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -65,17 +65,25 @@ cp .specify/extensions/pingcode/pingcode-config.template.yml \
 ## 层级映射
 
 ```text
-史诗(Epic) → 特性(Feature)  ← 运行时交互选择(或 --epic/--feature 指定),story --parent 挂特性下
+史诗(Epic) → 特性(Feature)  ← 运行时交互选择(或 --epic/--feature 指定),卡 --parent 挂特性下
+
+单卡模式(默认,story_artifact: ""):
 SPEC.md (# 标题 + 正文)   →  用户故事(Story)      ← 迭代挂在这一层
   │
-  ├─ ## Phase N 标题      →  (默认)嵌入 story 描述的分组 checklist
-  │                          可选:建为独立工作项(3 层模式)
+  ├─ ## Phase N / ### User Story N 章节 → 嵌入 story 描述的分组 checklist
   │
   └─ - [ ] T001 任务行    →  任务(Task),--parent 挂到 story
                              T 编号保留在标题中,便于溯源
+
+按章节模式(story_artifact 非空):
+### User Story N 章节    →  各建一张卡(story_artifact 类型),--parent 挂特性
+  │                         (spec_artifact 设类型名时先建 spec 父卡,章节卡挂其下)
+  │                         优先级:章节尾注 P1/P2/P3 → priority_mapping → --priority
+  └─ - [ ] T001 [US1]     →  任务,--parent 挂所属章节卡;无 [US#] 标记的
+                             跨故事任务挂 spec 父卡/特性
 ```
 
-一个 spec 是一个可交付闭环,对应一张 story 卡;Phase 是实施阶段而非交付物,因此默认不建独立工作项。
+User Story 是可独立交付验证的切片,按章节模式下每个章节对应一张卡;Phase 是实施阶段而非交付物,不作映射,仅作描述分组。单卡模式则把整个 spec 视为一个可交付闭环,对应一张 story 卡。
 
 ## 命令
 
@@ -103,7 +111,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 ### `/speckit.pingcode.sync-status`
 
-将 `tasks.md` 的完成标记同步为 PingCode 状态流转,全完成后收尾 story,写日志 `pingcode-sync-log.json`。
+将 `tasks.md` 的完成标记同步为 PingCode 状态流转,各卡任务全完成后逐卡收尾 story,写日志 `pingcode-sync-log.json`。
 
 ```bash
 /speckit.pingcode.sync-status              # 自动检测
@@ -121,13 +129,15 @@ project: "网运通项目组"        # 必填,项目名或标识符
 sprint: ""                    # 可选,留空走运行时解析链
 
 mapping:
-  spec_artifact: "用户故事"    # SPEC.md 的映射类型
-  phase_artifact: ""           # 空=嵌入描述;设为特性类型名启用 3 层
+  spec_artifact: "用户故事"    # SPEC.md 整体的映射类型;按章节模式下可选作父卡
+  story_artifact: ""           # 空=单卡模式;设为类型名=按 User Story 章节建卡
   task_artifact: "任务"        # 空=极简模式
 
 defaults:
   spec:
     priority: ""                 # 如 "中" / "高",留空不设置
+  story:
+    priority: ""                 # 按章节模式章节卡的兜底优先级
   task:
     priority: ""
 
@@ -136,11 +146,16 @@ status_mapping:
   pending: "未开始"            # - [ ]
   in_progress: "进行中"        # - [~]
 
+priority_mapping:
+  p1: "高"                     # 章节 P1/P2/P3 → 优先级名(按章节模式章节卡)
+  p2: "中"
+  p3: "低"
+
 sync:
   complete_story_when_tasks_done: true
 ```
 
-环境变量覆盖(优先级高于配置文件):`SPECKIT_PINGCODE_PROJECT`、`SPECKIT_PINGCODE_SPRINT`、`SPECKIT_PINGCODE_SPEC_ARTIFACT`、`SPECKIT_PINGCODE_PHASE_ARTIFACT`、`SPECKIT_PINGCODE_TASK_ARTIFACT`、`SPECKIT_PINGCODE_STATUS_COMPLETED/PENDING/IN_PROGRESS`。
+环境变量覆盖(优先级高于配置文件):`SPECKIT_PINGCODE_PROJECT`、`SPECKIT_PINGCODE_SPRINT`、`SPECKIT_PINGCODE_SPEC_ARTIFACT`、`SPECKIT_PINGCODE_STORY_ARTIFACT`、`SPECKIT_PINGCODE_TASK_ARTIFACT`、`SPECKIT_PINGCODE_STATUS_COMPLETED/PENDING/IN_PROGRESS`、`SPECKIT_PINGCODE_PRIORITY_P1/P2/P3`。
 
 ## 任务完成标记
 

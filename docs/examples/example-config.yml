@@ -6,13 +6,20 @@ project: "网运通项目组"       # 或 "WYT"
 sprint: ""                    # 留空:每次运行自动选进行中的迭代,多个时询问
 
 mapping:
-  spec_artifact: "用户故事"    # 一个 spec = 一张可交付的 story 卡
-  phase_artifact: ""           # Phase 嵌入 story 描述(2 层模式)
+  spec_artifact: "用户故事"    # 单卡模式:一个 spec = 一张可交付的 story 卡
+  story_artifact: ""           # 留空 = User Story 章节仅嵌入描述(单卡模式)
   task_artifact: "任务"        # 任务行建为任务工作项,--parent 挂 story
+
+priority_mapping:
+  p1: "高"                     # 章节 (Priority: P1) 🎯 MVP → 高
+  p2: "中"
+  p3: "低"
 
 defaults:
   spec:
     priority: ""               # 可填 "中" / "高"
+  story:
+    priority: ""               # 章节卡兜底优先级(章节无 P 编号时)
   task:
     priority: ""
 
@@ -24,6 +31,7 @@ status_mapping:
 sync:
   complete_story_when_tasks_done: true
 
-# 3 层模式示例(Phase 建独立工作项):把 phase_artifact 改为:
-#   phase_artifact: "特性"
-# 此时层级为 用户故事 → 特性 → 任务
+# 按章节模式示例(User Story 章节各自建卡):改为
+#   story_artifact: "用户故事"
+#   spec_artifact: ""          # 章节卡直接挂特性;或设 "特性" 作章节卡父卡
+# 此时层级为 Feature → 用户故事(每章节一张) → 任务([US#] 标记路由)

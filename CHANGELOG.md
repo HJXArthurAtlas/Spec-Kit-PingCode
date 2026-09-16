@@ -5,6 +5,32 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.0.0] - 2026-09-16
+
+### Changed
+
+- **BREAKING**:`mapping.phase_artifact` 移除,代之以 `mapping.story_artifact` —— 映射轴从
+  TASKS.md 的 Phase 标题改为 SPEC.md 的 `### User Story N` 章节。Phase 是实施阶段而非交付物,
+  不再可映射为工作项,始终以分组 checklist 嵌入所属卡描述。
+  环境变量 `SPECKIT_PINGCODE_PHASE_ARTIFACT` 更名为 `SPECKIT_PINGCODE_STORY_ARTIFACT`
+- `story_artifact` 留空(默认)= 单卡模式,行为与旧版 2 层模式一致:整个 spec 一张
+  `spec_artifact` 卡;设为类型名 = 按章节模式,每个 User Story 章节建一张卡,
+  `spec_artifact` 可选作章节卡的父卡(建议留空或设更高需求类型如 "特性")
+- `pingcode-mapping.json` 结构调整:`story` 单对象 + `phases[]` 嵌套任务 → 顶层 `stories[]`
+  (单卡模式为单个 `us_no: null` 条目)+ `spec_card` + 顶层 `tasks[]`(新增 `us_no` 字段);
+  `mode` 取值改为 `single | by-story`,极简模式改由独立的 `minimal` 布尔字段表达
+- `sync-status` 收尾逻辑改为逐卡:每张 story 卡在其关联任务(`us_no` 匹配)全部完成后流转;
+  按章节模式的 spec 父卡不自动收尾
+
+### Added
+
+- 按章节模式:任务行按 `[US#]` 标记路由到所属章节卡;无标记的跨故事任务
+  (Setup/Foundational/Polish 等)挂 spec 父卡,无父卡时挂所选特性/史诗
+- 按章节模式章节卡携带优先级:从章节标题尾注捕获 `P1/P2/P3`,经新增 `priority_mapping`
+  (默认 高/中/低,环境变量 `SPECKIT_PINGCODE_PRIORITY_P1/P2/P3`)映射为项目优先级名;
+  无编号章节回落 `defaults.story.priority`,仍未设置则不设优先级。映射文件 `stories[]`
+  条目新增 `priority` 字段记录实际设置值
+
 ## [1.1.0] - 2026-09-14
 
 ### Added

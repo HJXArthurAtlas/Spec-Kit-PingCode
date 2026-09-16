@@ -4,7 +4,7 @@ description: "将本地任务完成状态同步到 PingCode 工作项"
 
 # 同步任务完成状态到 PingCode
 
-读取本地 `tasks.md` 的勾选状态,把已建好的 PingCode 工作项流转到对应状态;任务全部完成时将 story 一并收尾。
+读取本地 `tasks.md` 的勾选状态,把已建好的 PingCode 工作项流转到对应状态;各 story 卡的关联任务全部完成时逐卡收尾。
 
 **方向:本地 → PingCode,单向执行。** PingCode 侧的状态不回写本地文件;发现两侧不一致时只报告不擅自改动(除非本地标记为完成)。
 
@@ -94,15 +94,16 @@ pingcode workitem update <identifier> --state "<目标状态名>"
 
 ### 7. Story 收尾
 
-统计:本地 completed 任务数 / 总任务数。
+映射 `stories[]` 逐卡统计其**关联任务**(`us_no` 匹配;单卡模式唯一条目 `us_no: null`,关联全部任务):
 
-- 全部完成且 `sync.complete_story_when_tasks_done: true` → 将 story 流转到完成态:
+- 该卡关联任务全部 completed 且 `sync.complete_story_when_tasks_done: true` → 流转该卡到完成态:
 
 ```bash
-pingcode workitem update <story_identifier> --state "<status_mapping.completed>"
+pingcode workitem update <卡 identifier> --state "<status_mapping.completed>"
 ```
 
-- 未全部完成 → 不动 story,输出进度百分比
+- 未全部完成 → 不动该卡,输出各卡进度(单卡模式即总进度百分比)
+- 按章节模式的 `spec_card`(父卡)不自动收尾
 
 ### 8. 写同步日志
 
@@ -112,7 +113,10 @@ pingcode workitem update <story_identifier> --state "<status_mapping.completed>"
 {
   "synced_at": "<ISO8601>",
   "spec": "<name>",
-  "story_identifier": "<identifier>",
+  "stories": [
+    {"us_no": "US1", "identifier": "<identifier>", "closed": true},
+    {"us_no": "US2", "identifier": "<identifier>", "closed": false}
+  ],
   "transitions": [
     {"task_id": "T001", "identifier": "WYT-1001", "from": "进行中", "to": "已完成"}
   ],
@@ -124,7 +128,7 @@ pingcode workitem update <story_identifier> --state "<status_mapping.completed>"
 }
 ```
 
-同时更新映射文件中各任务的 `local_status` 与 `state` 字段、`updated_at`。
+同时更新映射文件中各任务的 `local_status`/`state`、各 story 卡的 `state` 字段及 `updated_at`。
 
 ### 9. 输出总结
 
@@ -132,7 +136,9 @@ pingcode workitem update <story_identifier> --state "<status_mapping.completed>"
 ═══════════════════════════════════════════
 ✅ 状态同步完成
 ═══════════════════════════════════════════
-Story: <identifier> - <标题>
+Story 卡(按章节模式逐卡列出;单卡模式一行):
+  • US1 <identifier> - <标题>   已收尾
+  • US2 <identifier> - <标题>   3 / 5
 进度: 40 / 42 (95%)
 
 流转(<n> 条):
