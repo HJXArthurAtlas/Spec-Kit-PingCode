@@ -8,13 +8,14 @@
 
 ## 功能
 
-- **层级转换**:SPEC.md → 用户故事,Phase/User Story 章节嵌入描述作分组 checklist(单卡模式,默认),任务行 → 任务工作项
-- **按章节模式(可选)**:spec.md 的每个 `### User Story N` 章节各建一张卡,任务按 `[US#]` 标记挂到所属卡,优先级按章节 `P1/P2/P3` 映射
-- **极简模式(可选)**:只建卡,任务以 checklist 存在于描述中
+- **层级转换**:任务行 → 任务工作项,原生 `--parent` 挂接;Phase 是实施阶段而非交付物,不作映射,仅作为描述内任务清单的分组 checklist
+- **单卡模式(默认)**:整个 SPEC.md → 一张用户故事卡(`spec_artifact`),迭代挂这一层;User Story 章节仅作为描述文本嵌入
+- **按章节模式(可选)**:spec.md 的每个 `### User Story N` 章节各建一张卡(`story_artifact`),任务按 `[US#]` 标记挂到所属卡,优先级按章节尾注 `P1/P2/P3` 经 `priority_mapping` 映射
+- **极简模式(可选)**:与上两种正交(`task_artifact: ""`),不建任务工作项,任务以 checklist 存在于卡描述中
 - **原生父子挂接**:PingCode `--parent` 参数,无需链接字段配置
-- **Epic/Feature 关联**:创建 story 前交互选择史诗与特性(`--epic`/`--feature` 可跳过交互),story `--parent` 挂特性之下,呈现 史诗 → 特性 → 用户故事 完整层级;可选择直接挂史诗或跳过
+- **Epic/Feature 关联**:建卡前交互选择史诗与特性(`--epic`/`--feature` 可跳过交互),卡 `--parent` 挂特性之下,呈现 史诗 → 特性 → 用户故事 完整层级;可选择直接挂史诗或跳过
 - **上下文发现**:探查项目的类型/状态/迭代字典,生成配置片段
-- **状态同步**:本地 `[x]`/`[~]`/`[ ]` 标记 → PingCode 状态流转,各卡任务全完成逐卡收尾 story
+- **状态同步**:本地 `[x]`/`[~]`/`[ ]` 标记 → PingCode 状态流转,各卡关联任务全完成后逐卡收尾
 - **灵活迭代**:迭代不写死,运行时按解析链确定(参数 > 配置 > 上下文 > 自动发现/询问)
 - **幂等防护**:已有映射文件时提供补建/重建/中止选项
 
@@ -70,7 +71,7 @@ cp .specify/extensions/pingcode/pingcode-config.template.yml \
 单卡模式(默认,story_artifact: ""):
 SPEC.md (# 标题 + 正文)   →  用户故事(Story)      ← 迭代挂在这一层
   │
-  ├─ ## Phase N / ### User Story N 章节 → 嵌入 story 描述的分组 checklist
+  ├─ ## Phase N 标题      →  任务清单的分组 checklist;SPEC 全文(含 US 章节)嵌入描述
   │
   └─ - [ ] T001 任务行    →  任务(Task),--parent 挂到 story
                              T 编号保留在标题中,便于溯源
