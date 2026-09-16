@@ -12,25 +12,23 @@ project: ""
 # 解析优先级:--sprint 命令参数 > 此处 > context 当前迭代 > sprint list --status in_progress 自动/询问
 sprint: ""
 
-# 制品 → 工作项类型映射
+# 制品 → 工作项映射
+# 只有两级会建工作项:spec 整体、spec 的 User Story 章节。
+# Phase 与任务不建工作项,以 checklist 文本折叠进所属卡的描述。
 # 类型名以项目实际配置为准,可用 /speckit.pingcode.discover-context 查询
 mapping:
-  # SPEC.md 整体映射的工作项类型(默认用户故事:一个 spec 是一个可交付闭环)
-  # story_artifact 非空(按章节模式)时,此项可选作章节卡的父卡类型——
-  # 建议留空或设更高需求类型(如 "特性");单卡模式下即 spec 卡本身
+  # SPEC.md 整体映射的工作项类型
+  # 典型值:"特性"(spec = 特性卡,章节卡挂其下)或 "用户故事"(spec = 一张故事卡)
+  # 留空 "" = spec 不建卡(此时必须配置 story_artifact,章节卡挂所选特性/史诗下)
   spec_artifact: "用户故事"
 
   # spec.md 的 `### User Story N` 章节映射的工作项类型
-  # 留空 "" = 单卡模式(默认):整个 spec 一张卡,User Story 章节仅嵌入描述
-  # 设为类型名(如 "用户故事") = 按章节模式:每个章节建一张卡,
-  #   任务按 [US#] 标记挂到所属章节卡
+  # 留空 "" = 章节不建卡,全文作为正文并入 spec 卡描述
+  # 设为类型名(如 "用户故事") = 每个章节建一张卡,挂 spec 卡下;
+  #   此时 spec 卡描述只保留非 User Story 正文,章节卡保存各自内容
   story_artifact: ""
 
-  # 任务行映射的工作项类型
-  # 设为 "" = 极简模式:任务只存在于 story 描述的 checklist 中,不建工作项
-  task_artifact: "任务"
-
-# 章节 P1/P2/P3 → 项目优先级名(按章节模式创建章节卡时使用)
+# 章节 P1/P2/P3 → 项目优先级名(创建章节卡时使用)
 # 从章节标题尾注捕获 P 编号(如 "(Priority: P1)"、"(P1)"),按此映射设置 --priority
 # 未捕获编号的章节回落 defaults.story.priority,仍未设置则不设优先级
 # 优先级名以项目实际字典为准,可用 /speckit.pingcode.discover-context 查询
@@ -42,24 +40,19 @@ priority_mapping:
 # 默认值(可选)
 defaults:
   spec:
-    priority: ""   # 如 "中" / "高",留空不设置
+    priority: ""   # spec 卡优先级,留空不设置
   story:
-    priority: ""   # 按章节模式章节卡的兜底优先级(章节无 P 编号或映射未命中时)
-  task:
-    priority: ""
+    priority: ""   # 章节卡兜底优先级(章节无 P 编号时)
 
 # 状态映射(sync-status 使用)
-# 将 TASKS.md 完成标记映射到 PingCode 状态名
-# 状态名按项目可配置;执行时若名称不匹配,按 state_type
-# (completed/started/pending)兜底解析
+# 某张卡关联的任务全部勾选 [x] 后,将该卡流转到以下状态
+# 名称不匹配时按 state_type=completed 兜底解析
 status_mapping:
-  completed: "已完成"       # - [x]
-  pending: "未开始"         # - [ ]
-  in_progress: "进行中"     # - [~](可选约定)
+  completed: "已完成"
 
 # 同步行为
 sync:
-  # 任务全部完成后,是否将 story 自动流转到完成态
+  # 卡的任务全部完成后,是否自动将该卡流转到完成态
   complete_story_when_tasks_done: true
 
 # 环境变量覆盖(优先级高于本文件):
@@ -67,10 +60,7 @@ sync:
 #   SPECKIT_PINGCODE_SPRINT
 #   SPECKIT_PINGCODE_SPEC_ARTIFACT
 #   SPECKIT_PINGCODE_STORY_ARTIFACT
-#   SPECKIT_PINGCODE_TASK_ARTIFACT
 #   SPECKIT_PINGCODE_PRIORITY_P1
 #   SPECKIT_PINGCODE_PRIORITY_P2
 #   SPECKIT_PINGCODE_PRIORITY_P3
 #   SPECKIT_PINGCODE_STATUS_COMPLETED
-#   SPECKIT_PINGCODE_STATUS_PENDING
-#   SPECKIT_PINGCODE_STATUS_IN_PROGRESS

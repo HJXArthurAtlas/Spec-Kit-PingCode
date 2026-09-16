@@ -39,7 +39,7 @@ pingcode context set-current-project "<项目名或ID>"
 从 `.pingcode/cache.json` 读取(键结构不同,注意区分):
 
 - `work_item_types["<project_id>"].values[]` → `id`、`name`、`group`(requirement/task/bug)
-- `work_item_states["<project_id>::<type_id>"].values[]` → 状态**按工作项类型分组**,每种类型有独立状态集;取 `name` 与 `type`(pending/in_progress/completed/closed)。对 spec/story/task 三种映射类型都要读取
+- `work_item_states["<project_id>::<type_id>"].values[]` → 状态**按工作项类型分组**,每种类型有独立状态集;取 `name` 与 `type`(pending/in_progress/completed/closed)。对 spec/story 两种映射类型都要读取
 - `work_item_priorities` → 优先级字典
 - `projects.values[]` → 项目清单(名称/标识符)
 
@@ -86,14 +86,11 @@ pingcode sprint list <project_id> --status completed
 project: "<项目名>"
 
 mapping:
-  spec_artifact: "<story 或 用户故事,取实际存在的最接近类型>"
-  story_artifact: ""            # 如需按 User Story 章节建卡改为 "<story 类型名>"
-  task_artifact: "<task 类型名>"
+  spec_artifact: "<特性 或 用户故事,取实际存在的最接近类型>"
+  story_artifact: "<用户故事类型名;章节不单独建卡则留空>"
 
 status_mapping:
   completed: "<state_type=completed 的实际状态名>"
-  pending: "<state_type=pending 的实际状态名>"
-  in_progress: "<state_type=started 的实际状态名>"
 
 priority_mapping:
   p1: "<实际优先级名,如 高/紧急>"
@@ -101,7 +98,7 @@ priority_mapping:
   p3: "<如 低>"
 ```
 
-若项目中存在 `story`(用户故事)类型 → `spec_artifact` 推荐它;否则在展示中说明当前类型集,让用户人工决定。优先级名取 `work_item_priorities` 字典实际值;项目无多级优先级概念时全部留空。
+`spec_artifact` 优先推荐 `特性`(章节卡挂其下,构成完整需求树);项目无特性类型时推荐 `用户故事`。优先级名取 `work_item_priorities` 字典实际值;项目无多级优先级概念时全部留空。
 
 ### 7. 保存探查结果
 

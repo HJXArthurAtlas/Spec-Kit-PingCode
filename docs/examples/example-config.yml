@@ -5,10 +5,15 @@
 project: "网运通项目组"       # 或 "WYT"
 sprint: ""                    # 留空:每次运行自动选进行中的迭代,多个时询问
 
+# 完整需求树示例:spec = 特性,User Story 章节 = 用户故事
 mapping:
-  spec_artifact: "用户故事"    # 单卡模式:一个 spec = 一张可交付的 story 卡
-  story_artifact: ""           # 留空 = User Story 章节仅嵌入描述(单卡模式)
-  task_artifact: "任务"        # 任务行建为任务工作项,--parent 挂 story
+  spec_artifact: "特性"        # spec 卡:非 User Story 正文 + 跨故事任务清单
+  story_artifact: "用户故事"    # 每章节一张用户故事卡,挂 spec 卡下,内容为章节自身
+
+# 只建一张卡的示例:把 mapping 改为
+#   spec_artifact: "用户故事"
+#   story_artifact: ""
+# 此时整个 spec(含章节与任务清单)折叠进一张故事卡
 
 priority_mapping:
   p1: "高"                     # 章节 (Priority: P1) 🎯 MVP → 高
@@ -20,18 +25,9 @@ defaults:
     priority: ""               # 可填 "中" / "高"
   story:
     priority: ""               # 章节卡兜底优先级(章节无 P 编号时)
-  task:
-    priority: ""
 
 status_mapping:
   completed: "已完成"
-  pending: "未开始"
-  in_progress: "进行中"
 
 sync:
   complete_story_when_tasks_done: true
-
-# 按章节模式示例(User Story 章节各自建卡):改为
-#   story_artifact: "用户故事"
-#   spec_artifact: ""          # 章节卡直接挂特性;或设 "特性" 作章节卡父卡
-# 此时层级为 Feature → 用户故事(每章节一张) → 任务([US#] 标记路由)

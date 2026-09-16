@@ -1,17 +1,17 @@
 ---
-description: "将本地任务完成状态同步到 PingCode 工作项"
+description: "本地任务全部勾选后,将对应的 PingCode 卡片流转到完成态"
 ---
 
 # 同步任务完成状态到 PingCode
 
-读取本地 `tasks.md` 的勾选状态,把已建好的 PingCode 工作项流转到对应状态;各 story 卡的关联任务全部完成时逐卡收尾。
+任务本身不是工作项(以 checklist 折叠在卡描述里),本命令只做**卡片收尾**:读取本地 `tasks.md` 的勾选进度,某张卡关联的任务全部 `- [x]` 时,把该卡流转到完成态。
 
-**方向:本地 → PingCode,单向执行。** PingCode 侧的状态不回写本地文件;发现两侧不一致时只报告不擅自改动(除非本地标记为完成)。
+**方向:本地 → PingCode,单向、只收尾。** 不做中间状态流转,不回退远端状态,不改本地文件;远端已推进的卡不动。
 
 ## 前置条件
 
 1. `pingcode` CLI 已安装且已认证
-2. 工作项已通过 `/speckit.pingcode.specstoissues` 创建
+2. 卡片已通过 `/speckit.pingcode.specstoissues` 创建
 3. 映射文件存在:`specs/<spec-name>/pingcode-mapping.json`
 4. `tasks.md` 中有完成标记
 
@@ -21,7 +21,7 @@ $ARGUMENTS
 
 可选参数:
 - `--spec <name>`:指定要同步的 spec;缺省自动检测
-- `--dry-run`:只输出将要执行的流转计划,不实际更新
+- `--dry-run`:只输出收尾计划,不实际更新
 
 ## 步骤
 
@@ -34,50 +34,51 @@ $ARGUMENTS
 3. 当前目录在 `specs/<name>/` 内
 4. `specs/` 下恰有一个含 `pingcode-mapping.json` 的 spec;多个则列出让用户选择,0 个则报错提示先运行 `/speckit.pingcode.specstoissues`
 
-### 2. 环境自检与配置加载
+### 2. 环境自检
 
 ```bash
 pingcode auth status
 pingcode context list
 ```
 
-若字典为空,用映射文件中的 `project_name` 执行 `pingcode context set-current-project "<project_name>"` 重建字典。加载 `pingcode-config.yml` 的 `status_mapping` 与 `sync` 段(环境变量覆盖规则同 specstoissues)。
+若字典为空,用映射文件中的 `project_name` 执行 `pingcode context set-current-project "<project_name>"` 重建。加载 `pingcode-config.yml` 的 `status_mapping.completed` 与 `sync` 段(环境变量覆盖规则同 specstoissues)。
 
-状态字典在 `.pingcode/cache.json` 的键为 `work_item_states["<project_id>::<type_id>"]` —— **按工作项类型分组**;解析某任务的目标状态时,用该任务类型的键。`pingcode workitem get <id> --compact` 返回的 `state` 与 `state_type` 是扁平字符串,直接可用。
+`pingcode workitem get <identifier> --compact` 返回的 `state` 与 `state_type` 是扁平字符串,直接可用;`status_mapping.completed` 不在缓存状态字典时,按 `state_type=completed`(`work_item_states["<project_id>::<type_id>"]`)取第一个状态名兜底,并输出注明。
 
 ### 3. 解析本地任务状态
 
-解析 `specs/<name>/tasks.md`,得到每个任务的当前标记:
+解析 `specs/<name>/tasks.md`:
 
-- `- [x]` → completed
-- `- [~]` → in_progress
-- `- [ ]` → pending
+- `- [x]` → completed;`- [~]` / `- [ ]` → 未完成
+- 以 `task_id`(T 编号)为键;没有编号的行按标题文本匹配
 
-以 `task_id`(T 编号)为键;没有编号的行按标题文本与映射中的 `title` 匹配。
+### 4. 计算各卡完成度
 
-### 4. 读取映射并核对远端
+任务的卡归属(与 specstoissues 的折叠规则一致):优先任务行 `[US#]` 标记,其次 Phase 标题含 `User Story <N>`,都没有 → spec 级。
 
-读 `specs/<name>/pingcode-mapping.json`。对每个有对应工作项的任务:
+| 模式 | 卡 | 关联任务 |
+|---|---|---|
+| spec-story | 每张 story 卡 | `us_no` 匹配的任务 |
+| spec-story | spec 卡 | 不自动收尾 |
+| spec-only | spec 卡 | 全部任务 |
+
+逐卡核对该卡当前状态(`mode`、`spec_card`、`stories` 读自映射文件):
 
 ```bash
 pingcode workitem get <identifier> --compact
 ```
 
-得到远端 `state` 与 `state_type`。
+已是 completed 的卡跳过。
 
-### 5. 计算流转计划
+### 5. 收尾计划
 
-| 本地 | 远端 state_type | 动作 |
-|---|---|---|
-| completed | completed | 无(跳过) |
-| completed | started/pending | `workitem update --state <status_mapping.completed>` |
-| in_progress | started | 无(跳过) |
-| in_progress | pending/completed | started→in_progress 更新;completed → **不回退**,记入"差异报告" |
-| pending | pending | 无(跳过) |
-| pending | started | **不回退**,记入差异报告(PingCode 侧推进以远端为准) |
-| pending | completed | **不回退**,记入差异报告 |
+某卡关联任务全部 completed 且 `sync.complete_story_when_tasks_done: true` → 计划流转该卡:
 
-状态名解析:优先用 `status_mapping` 的名称;若该名称不在项目状态字典中,回退为该 `state_type` 在缓存字典里的第一个状态名,并在输出中注明。
+```bash
+pingcode workitem update <identifier> --state "<status_mapping.completed>"
+```
+
+未全部完成 → 不动该卡,输出进度。远端已 completed 而本地未全勾 → 不回退,输出提示。
 
 `--dry-run`:输出完整计划后结束,不执行更新。
 
@@ -85,27 +86,10 @@ pingcode workitem get <identifier> --compact
 
 逐条执行计划中的更新:
 
-```bash
-pingcode workitem update <identifier> --state "<目标状态名>"
-```
-
-- HTTP 429:按 `x-pc-retry-after` 等待重试
+- HTTP 429:按 `x-pc-retry-after` 等待后重试
 - 单条失败:记入 errors 继续,不中断整批
 
-### 7. Story 收尾
-
-映射 `stories[]` 逐卡统计其**关联任务**(`us_no` 匹配;单卡模式唯一条目 `us_no: null`,关联全部任务):
-
-- 该卡关联任务全部 completed 且 `sync.complete_story_when_tasks_done: true` → 流转该卡到完成态:
-
-```bash
-pingcode workitem update <卡 identifier> --state "<status_mapping.completed>"
-```
-
-- 未全部完成 → 不动该卡,输出各卡进度(单卡模式即总进度百分比)
-- 按章节模式的 `spec_card`(父卡)不自动收尾
-
-### 8. 写同步日志
+### 7. 写同步日志
 
 写 `specs/<name>/pingcode-sync-log.json`:
 
@@ -113,40 +97,27 @@ pingcode workitem update <卡 identifier> --state "<status_mapping.completed>"
 {
   "synced_at": "<ISO8601>",
   "spec": "<name>",
-  "stories": [
+  "cards": [
     {"us_no": "US1", "identifier": "<identifier>", "closed": true},
-    {"us_no": "US2", "identifier": "<identifier>", "closed": false}
-  ],
-  "transitions": [
-    {"task_id": "T001", "identifier": "WYT-1001", "from": "进行中", "to": "已完成"}
-  ],
-  "divergences": [
-    {"task_id": "T003", "identifier": "WYT-1003", "local": "pending", "remote": "已完成", "note": "远端已完成,不回退"}
+    {"us_no": null, "identifier": "<identifier>", "closed": false, "note": "spec 卡不自动收尾"}
   ],
   "errors": [],
   "progress": {"completed": 40, "total": 42, "percent": 95}
 }
 ```
 
-同时更新映射文件中各任务的 `local_status`/`state`、各 story 卡的 `state` 字段及 `updated_at`。
+同时更新映射文件中各卡的 `state` 字段与 `updated_at`。
 
-### 9. 输出总结
+### 8. 输出总结
 
 ```
 ═══════════════════════════════════════════
 ✅ 状态同步完成
 ═══════════════════════════════════════════
-Story 卡(按章节模式逐卡列出;单卡模式一行):
+卡片(逐卡):
   • US1 <identifier> - <标题>   已收尾
-  • US2 <identifier> - <标题>   3 / 5
+  • US2 <identifier> - <标题>   3 / 5,未收尾
 进度: 40 / 42 (95%)
-
-流转(<n> 条):
-  • T001 WYT-1001  进行中 → 已完成
-  • ...
-
-差异(不回退,<m> 条):
-  • T003 WYT-1003  本地未勾选,但 PingCode 已完成 —— 请人工确认
 
 日志: specs/<name>/pingcode-sync-log.json
 ═══════════════════════════════════════════

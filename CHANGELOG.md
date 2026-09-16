@@ -5,6 +5,30 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.1.0] - 2026-09-16
+
+### Changed
+
+- **BREAKING**:映射收敛为 spec 与 User Story 两级——`mapping.task_artifact` 移除,
+  任务与 Phase 不再创建工作项,一律以 checklist 文本折叠进所属卡描述:
+  story 卡嵌自己的任务清单(按 Phase 分组),spec 卡嵌跨故事任务清单;
+  环境变量 `SPECKIT_PINGCODE_TASK_ARTIFACT` 移除
+- 卡片描述构成:配置 `story_artifact` 时 spec 卡只保留非 User Story 正文,
+  章节内容各自进章节卡;未配置时全文(含章节)并入 spec 卡
+- 父卡关联按顶层卡类型泛化:故事类卡选特性挂靠,特性类卡选史诗挂靠(均可跳过);
+  章节卡固定挂 spec 卡下
+- `status_mapping` 精简为仅 `completed`(中间状态不由扩展流转);
+  环境变量 `SPECKIT_PINGCODE_STATUS_PENDING/IN_PROGRESS` 移除
+- `sync-status` 精简为卡片收尾:某张卡关联任务全部 `[x]` → 流转该卡到完成态
+  (spec-story 模式逐 story 卡判断,spec-only 模式判断 spec 卡);
+  逐任务流转与差异报告移除,日志改为逐卡收尾记录
+- `pingcode-mapping.json` 移除 `tasks[]`/`minimal`/`summary`,`mode` 取值改为
+  `spec-only | spec-story`;任务归属由 sync-status 直接从 `tasks.md` 解析
+
+### Removed
+
+- 任务工作项创建流程与极简模式概念(任务永远只是卡内 checklist)
+
 ## [2.0.0] - 2026-09-16
 
 ### Changed
