@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.1.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.2.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 卡片——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,Phase 与任务以 checklist 折叠进卡描述;本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -15,6 +15,7 @@
 - **原生父子挂接**:PingCode `--parent` 参数,无需链接字段配置
 - **父卡关联**:按顶层卡类型交互选择上一级——故事类卡挂特性下、特性类卡挂史诗下(`--epic`/`--feature` 可跳过交互),呈现 史诗 → 特性 → 用户故事 层级
 - **上下文发现**:探查项目的类型/状态/迭代字典,生成配置片段
+- **一键初始化**:`/speckit.pingcode.init` 交互选择项目/迭代/映射类型/状态/优先级,直接生成配置文件
 - **状态同步**:本地任务全部 `[x]` 后自动收尾所属卡(单向,不回退)
 - **灵活迭代**:迭代不写死,运行时按解析链确定(参数 > 配置 > 上下文 > 自动发现/询问)
 - **幂等防护**:已有映射文件时提供补建/重建/中止选项
@@ -31,7 +32,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.1.0/pingcode-2.1.0.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.2.0/pingcode-2.2.0.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -47,19 +48,17 @@ specify extension add --dev /path/to/spec-kit-pingcode
 /speckit.plan
 /speckit.tasks
 
-# 1. 配置(复制模板,填 project)
-cp .specify/extensions/pingcode/pingcode-config.template.yml \
-   .specify/extensions/pingcode/pingcode-config.yml
+# 1. 交互式初始化:选项目/迭代/映射类型,直接生成配置文件
+/speckit.pingcode.init
+#    手动替代:复制 pingcode-config.template.yml 为 pingcode-config.yml 填 project;
+#    名称校准用 /speckit.pingcode.discover-context
 
-# 2. (可选)探查项目字典,校准类型/状态名
-/speckit.pingcode.discover-context
-
-# 3. 创建 PingCode 工作项层级
+# 2. 创建 PingCode 卡片层级
 /speckit.pingcode.specstoissues
 
-# 4. 本地实施,勾选 tasks.md 中的任务
+# 3. 本地实施,勾选 tasks.md 中的任务
 
-# 5. 同步完成状态到 PingCode
+# 4. 任务全部勾选后,收尾 PingCode 卡片
 /speckit.pingcode.sync-status
 ```
 
@@ -82,6 +81,16 @@ spec 与 User Story 是需求树上真实的交付单元;Phase 是实施分组�
 
 ## 命令
 
+### `/speckit.pingcode.init`
+
+交互式初始化:认证自检 → 选项目 → 按项目实际字典选映射类型/收尾状态/优先级名 → 选迭代(可留空走运行时解析链) → 生成 `pingcode-config.yml`。已存在的配置逐键展示差异,确认覆盖(旧文件备份 `.bak`)。
+
+```bash
+/speckit.pingcode.init                  # 全交互
+/speckit.pingcode.init --project WYT    # 跳过项目选择
+/speckit.pingcode.init --dry-run        # 只预览生成的配置
+```
+
 ### `/speckit.pingcode.specstoissues`
 
 从 spec 与 tasks 创建 PingCode 卡片层级,写映射文件 `specs/<spec-name>/pingcode-mapping.json`。
@@ -102,7 +111,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 ### `/speckit.pingcode.discover-context`
 
-探查项目的类型/状态/优先级/迭代字典,输出可粘贴的配置片段,存 `discovered-context.json`。首次接入或类型/状态名对不上时运行。
+探查项目的类型/状态/优先级/迭代字典,输出可粘贴的配置片段,存 `discovered-context.json`。类型/状态名对不上时运行;首次接入优先用 `/speckit.pingcode.init`。
 
 ### `/speckit.pingcode.sync-status`
 
@@ -117,7 +126,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 ## 配置
 
-`.specify/extensions/pingcode/pingcode-config.yml`(模板:`pingcode-config.template.yml`):
+`.specify/extensions/pingcode/pingcode-config.yml` —— 推荐用 `/speckit.pingcode.init` 交互生成;手动方式复制模板 `pingcode-config.template.yml` 填写:
 
 ```yaml
 project: "网运通项目组"        # 必填,项目名或标识符

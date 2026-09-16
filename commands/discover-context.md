@@ -117,4 +117,4 @@ priority_mapping:
 }
 ```
 
-结尾提示:把片段合入 `pingcode-config.yml` 后,即可运行 `/speckit.pingcode.specstoissues`。
+结尾提示:把片段合入 `pingcode-config.yml`(或改用 `/speckit.pingcode.init` 交互生成)后,即可运行 `/speckit.pingcode.specstoissues`。

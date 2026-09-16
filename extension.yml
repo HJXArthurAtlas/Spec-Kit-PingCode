@@ -4,7 +4,7 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.1.0"
+  version: "2.2.0"
   description: "Create PingCode cards (spec + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
@@ -23,8 +23,12 @@ provides:
   commands:
     - name: "speckit.pingcode.specstoissues"
       file: "commands/specstoissues.md"
-      description: "Create PingCode work item hierarchy from spec and tasks"
+      description: "Create PingCode cards (spec + user stories) from spec and tasks"
       aliases: ["speckit.pingcode.spec2items"]
+
+    - name: "speckit.pingcode.init"
+      file: "commands/init.md"
+      description: "Interactive setup: pick project, sprint and mapping types, generate pingcode-config.yml"
 
     - name: "speckit.pingcode.discover-context"
       file: "commands/discover-context.md"

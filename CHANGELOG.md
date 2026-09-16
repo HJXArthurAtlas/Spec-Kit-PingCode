@@ -5,6 +5,15 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.2.0] - 2026-09-16
+
+### Added
+
+- `/speckit.pingcode.init` 交互式初始化命令:认证自检、选择项目与迭代(可留空走运行时
+  解析链)、基于项目实际字典选择映射类型/收尾状态/优先级名,直接生成
+  `pingcode-config.yml`;支持 `--project`/`--force`/`--dry-run`,覆盖前备份为 `.bak`
+- `discover-context` 保留为字典重探与配置片段工具,README 快速开始改为 init 优先
+
 ## [2.1.0] - 2026-09-16
 
 ### Changed
