@@ -68,7 +68,7 @@ pingcode context set-current-project "<项目名称或ID>"
 - `priority_mapping.p1/p2/p3`:名称含「高/紧急」「中」「低」时自动建议对应档位,否则让用户逐档指定
 - 项目无多级优先级概念 → 三档全部留空
 
-### 6. 选择迭代
+### 6. 选择迭代并补全运行上下文
 
 ```bash
 pingcode sprint list <project_id> --status in_progress
@@ -79,6 +79,20 @@ pingcode sprint list <project_id> --status in_progress
 - 0 个 → 写空字符串(运行时再解析,或届时选择"不挂迭代")
 
 选定 → `sprint: "<迭代名称>"`;留空 → `sprint: ""`
+
+随后补全运行上下文——`workitem create` 硬性要求 context 含当前用户与当前迭代,缺失会拒绝执行:
+
+1. 取当前用户 id:`pingcode directory me`
+2. 迭代已定 → 一次管道喂齐三项(顺序:项目 → 迭代 → 用户,均可传编号或 ID):
+
+```bash
+printf '<项目>\n<迭代ID>\n<用户ID>\n' | pingcode context init
+```
+
+   迭代留空 → 项目已由第 2 步设置,只补用户:`pingcode context set-current-user <用户ID>`
+3. 校验:`pingcode context list` 的 `preferences` 应含 `current_project_id`、`current_user_id`(迭代已定则还有 `current_sprint_id`)
+
+完成后,`/speckit.pingcode.specstoissues` 运行时不再需要补建上下文。
 
 ### 7. 生成配置
 

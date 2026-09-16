@@ -5,6 +5,16 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.2.1] - 2026-09-16
+
+### Changed
+
+- `init` 命令第 6 步扩展为「选迭代并补全运行上下文」:迭代选定后用一次
+  `printf ... | pingcode context init` 管道喂齐 项目/迭代/用户 三项偏好
+  (迭代留空时仅 `set-current-user`),并以 `context list` 校验——完成后
+  `specstoissues` 运行时不再缺 `workitem create` 的上下文前置
+- `specstoissues` 上下文自检注明:跑过 `init` 后该兜底通常可跳过
+
 ## [2.2.0] - 2026-09-16
 
 ### Added

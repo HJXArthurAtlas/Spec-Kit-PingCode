@@ -75,7 +75,7 @@ pingcode context set-current-project "<配置的项目名>"
 printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 ```
 
-完成后用 `pingcode context list` 确认 `preferences` 含 `current_project_id`/`current_sprint_id`/`current_user_id` 三项。
+完成后用 `pingcode context list` 确认 `preferences` 含 `current_project_id`/`current_sprint_id`/`current_user_id` 三项。(若运行过 `/speckit.pingcode.init`,这三项通常已就绪,本步可跳过。)
 
 工作区缓存 `.pingcode/cache.json` 是机器本地文件,确认它已被项目 `.gitignore` 忽略;没有则追加 `.pingcode/`。
 
