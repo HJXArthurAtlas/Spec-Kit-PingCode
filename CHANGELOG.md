@@ -5,6 +5,27 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.3.0] - 2026-09-22
+
+### Changed
+
+- **BREAKING**:默认 hook 从 `after_tasks` 移到 `after_plan`——`/speckit.plan` 完成即提示
+  创建 PingCode 卡片(此时 `tasks.md` 尚未生成,`specstoissues` 不再要求也不读取 `tasks.md`)
+- **BREAKING**:任务清单不再折叠进卡描述——任务与 Phase 永不进卡片,进度只看本地
+  `tasks.md`,由 `sync-status` 据此收尾
+- **BREAKING**:映射默认值改为 `spec_artifact: "特性"` + `story_artifact: "用户故事"`,
+  spec-story 双层成为默认模式
+- **BREAKING**:父卡关联重构为需求关联——运行时先解析产品(`--product` > config `product`
+  > 交互),选择产品下的「需求」(idea)后自动查找/创建同名 Epic(按标题精确匹配复用,
+  描述内记 `> 来源需求:` 追溯),spec 卡挂 Epic 下、章节卡挂 spec 卡下;
+  新增 `--idea`/`--product` 参数,移除 `--epic`/`--feature`
+
+### Added
+
+- 配置新增 `product` 字段与环境变量 `SPECKIT_PINGCODE_PRODUCT`;`init` 命令新增产品选择步骤
+- `pingcode-mapping.json` 新增 `product_id`、`idea`、`epic` 字段
+- `discover-context` 探查结果与配置片段补充产品清单
+
 ## [2.2.1] - 2026-09-16
 
 ### Changed

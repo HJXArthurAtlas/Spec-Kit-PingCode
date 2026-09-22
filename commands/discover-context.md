@@ -43,15 +43,16 @@ pingcode context set-current-project "<项目名或ID>"
 - `work_item_priorities` → 优先级字典
 - `projects.values[]` → 项目清单(名称/标识符)
 
-### 4. 查询迭代
+### 4. 查询迭代与产品
 
 ```bash
 pingcode sprint list <project_id> --status pending
 pingcode sprint list <project_id> --status in_progress
 pingcode sprint list <project_id> --status completed
+pingcode product list --compact
 ```
 
-汇总为迭代表:名称、状态、起止时间。
+汇总为迭代表:名称、状态、起止时间;产品清单(名称/标识符/id)供配置 `product` 参考(specstoissues 关联需求用)。
 
 ### 5. 展示结果
 
@@ -84,9 +85,10 @@ pingcode sprint list <project_id> --status completed
 ```yaml
 # 建议粘贴到 .specify/extensions/pingcode/pingcode-config.yml
 project: "<项目名>"
+product: "<产品名,可选;specstoissues 关联需求用>"
 
 mapping:
-  spec_artifact: "<特性 或 用户故事,取实际存在的最接近类型>"
+  spec_artifact: "特性"
   story_artifact: "<用户故事类型名;章节不单独建卡则留空>"
 
 status_mapping:
@@ -98,7 +100,7 @@ priority_mapping:
   p3: "<如 低>"
 ```
 
-`spec_artifact` 优先推荐 `特性`(章节卡挂其下,构成完整需求树);项目无特性类型时推荐 `用户故事`。优先级名取 `work_item_priorities` 字典实际值;项目无多级优先级概念时全部留空。
+`spec_artifact` 优先推荐 `特性`(spec 卡挂同名 Epic 下,章节卡挂 spec 卡下,构成 需求 → Epic → 特性 → 用户故事 层级);项目无特性类型时推荐 `用户故事`。优先级名取 `work_item_priorities` 字典实际值;项目无多级优先级概念时全部留空。
 
 ### 7. 保存探查结果
 
@@ -113,7 +115,8 @@ priority_mapping:
   "types": [{"id": "story", "name": "用户故事", "group": "requirement"}],
   "states": [{"name": "进行中", "type": "started"}],
   "priorities": ["低", "中", "高"],
-  "sprints": [{"id": "...", "name": "Sprint 21", "status": "in_progress"}]
+  "sprints": [{"id": "...", "name": "Sprint 21", "status": "in_progress"}],
+  "products": [{"id": "...", "name": "<产品名>", "identifier": "<标识>"}]
 }
 ```
 

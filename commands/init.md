@@ -1,10 +1,10 @@
 ---
-description: "交互式初始化 PingCode 集成:选择项目/迭代/映射类型,生成 pingcode-config.yml"
+description: "交互式初始化 PingCode 集成:选择项目/产品/迭代/映射类型,生成 pingcode-config.yml"
 ---
 
 # 初始化 PingCode 集成配置
 
-交互式完成扩展配置并直接生成 `.specify/extensions/pingcode/pingcode-config.yml`。所有类型/状态/优先级名都从项目实际字典探查后写入,不猜测;迭代可固定到配置,也可留空走运行时解析链。
+交互式完成扩展配置并直接生成 `.specify/extensions/pingcode/pingcode-config.yml`。所有类型/状态/优先级名都从项目实际字典探查后写入,不猜测;产品与迭代可固定到配置,也可留空走运行时解析链。
 
 ## 前置条件
 
@@ -47,28 +47,42 @@ pingcode context set-current-project "<项目名称或ID>"
 
 该命令会同时把类型/状态/优先级/迭代字典写入 `.pingcode/cache.json`;确认 `.pingcode/` 已被项目 `.gitignore` 忽略,没有则追加。
 
-### 3. 选择映射类型
+### 3. 选择产品(需求关联用)
+
+`specstoissues` 创建卡片时要关联产品下的「需求」(idea)。查询产品:
+
+```bash
+pingcode product list --compact
+```
+
+- 恰好 1 个 → 询问是否固定到配置
+- 多个 → 列出(名称/标识符)让用户选择其一或跳过
+- 0 个或查询失败 → 写空字符串(运行时交互选择,或跳过需求关联)
+
+选定 → `product: "<产品名称>"`;跳过 → `product: ""`。名称/标识符与 ID 的对应以 `product list` 输出为准,不猜测。
+
+### 4. 选择映射类型
 
 从缓存 `work_item_types["<project_id>"].values[]` 列出全部类型(`id`/`name`/`group`)让用户选择:
 
-- `spec_artifact`:推荐 `group=requirement` 中名称含「特性/feature」或「用户故事/story」的类型
+- `spec_artifact`:推荐 `group=requirement` 中名称含「特性/feature」的类型(spec = 特性卡,挂同名 Epic 下)
 - `story_artifact`:推荐「用户故事/story」类;用户可选择"不按章节建卡"(写空字符串)
 - 两者皆空 → 提示至少配置一项,回到本步重选
 
-### 4. 选择收尾状态名
+### 5. 选择收尾状态名
 
 取收尾对象类型的状态集(键 `work_item_states["<project_id>::<type_id>"]`;spec-story 模式用 story 类型,spec-only 模式用 spec 类型):
 
 - `status_mapping.completed`:优先取 `type=completed` 的第一个状态名,并列出全部可选项让用户确认
 
-### 5. 选择优先级名
+### 6. 选择优先级名
 
 列出 `work_item_priorities` 字典的全部名称:
 
 - `priority_mapping.p1/p2/p3`:名称含「高/紧急」「中」「低」时自动建议对应档位,否则让用户逐档指定
 - 项目无多级优先级概念 → 三档全部留空
 
-### 6. 选择迭代并补全运行上下文
+### 7. 选择迭代并补全运行上下文
 
 ```bash
 pingcode sprint list <project_id> --status in_progress
@@ -94,12 +108,13 @@ printf '<项目>\n<迭代ID>\n<用户ID>\n' | pingcode context init
 
 完成后,`/speckit.pingcode.specstoissues` 运行时不再需要补建上下文。
 
-### 7. 生成配置
+### 8. 生成配置
 
 按以下结构组装(`defaults` 两档优先级询问用户,可留空):
 
 ```yaml
 project: "<选定项目>"
+product: "<选定产品 或 空>"
 sprint: "<选定迭代 或 空>"
 
 mapping:
@@ -133,11 +148,12 @@ sync:
 ```
 ✅ 配置已生成: .specify/extensions/pingcode/pingcode-config.yml
    项目: <名称>(<id>)
+   产品: <名称 或 运行时选择>
    spec 卡: <spec_artifact>   story 卡: <story_artifact 或 不建>
    收尾状态: <completed 名>   迭代: <名 或 运行时解析>
 ```
 
-### 8. 下一步
+### 9. 下一步
 
 - 创建卡片:`/speckit.pingcode.specstoissues`(可先加 `--dry-run` 预览创建计划)
 - 字典变化后重探/校准:`/speckit.pingcode.discover-context`
@@ -149,5 +165,6 @@ sync:
 | `command not found: pingcode` | 按 https://github.com/metaphor/pingcode-cli 安装 CLI |
 | `authenticated: false` | 运行 `pingcode auth login`,或设置 `PINGCODE_CLIENT_ID`/`PINGCODE_CLIENT_SECRET` |
 | 项目名解析失败 | 用 `pingcode context list` 查看缓存项目清单;确认名称/标识符后重试 |
+| 产品列表为空/解析失败 | `pingcode product list --compact` 核对;企业未开通产品域时写空,运行时跳过需求关联 |
 | 字典为空 | 重跑 `pingcode context set-current-project`;仍为空则检查 CLI 版本 |
 | workspace context 报错 | 在 git 仓库根执行,或将 `PINGCODE_WORKSPACE_CACHE` 设为绝对路径 |

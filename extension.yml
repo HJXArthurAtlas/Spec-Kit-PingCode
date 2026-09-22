@@ -4,8 +4,8 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.2.1"
-  description: "Create PingCode cards (spec + user stories) from spec-kit artifacts via the pingcode CLI"
+  version: "2.3.0"
+  description: "Create PingCode requirement tree (idea → epic → feature + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
   license: "MIT"
@@ -23,7 +23,7 @@ provides:
   commands:
     - name: "speckit.pingcode.specstoissues"
       file: "commands/specstoissues.md"
-      description: "Create PingCode cards (spec + user stories) from spec and tasks"
+      description: "Create PingCode cards (idea → epic → feature + user stories) from spec"
       aliases: ["speckit.pingcode.spec2items"]
 
     - name: "speckit.pingcode.init"
@@ -45,11 +45,11 @@ provides:
       required: true
 
 hooks:
-  after_tasks:
+  after_plan:
     command: "speckit.pingcode.specstoissues"
     optional: true
-    prompt: "将 spec 创建为 PingCode 卡片?"
-    description: "在 /speckit.tasks 生成后可选自动创建 PingCode 卡片"
+    prompt: "选择关联需求并创建 PingCode 卡片?"
+    description: "在 /speckit.plan 完成后可选创建 PingCode 需求树卡片(需求 → Epic → 特性 → 用户故事)"
 
 tags:
   - "issue-tracking"

@@ -3,17 +3,18 @@
 # 迭代:正常迭代分组下的 Sprint N
 
 project: "网运通项目组"       # 或 "WYT"
+product: ""                    # 留空:每次运行交互选择需求所在的产品
 sprint: ""                    # 留空:每次运行自动选进行中的迭代,多个时询问
 
-# 完整需求树示例:spec = 特性,User Story 章节 = 用户故事
+# 完整需求树示例:spec = 特性(挂同名 Epic 下),User Story 章节 = 用户故事(挂 spec 卡下)
 mapping:
-  spec_artifact: "特性"        # spec 卡:非 User Story 正文 + 跨故事任务清单
+  spec_artifact: "特性"        # spec 卡:非 User Story 正文(任务不进卡描述)
   story_artifact: "用户故事"    # 每章节一张用户故事卡,挂 spec 卡下,内容为章节自身
 
 # 只建一张卡的示例:把 mapping 改为
-#   spec_artifact: "用户故事"
+#   spec_artifact: "特性"
 #   story_artifact: ""
-# 此时整个 spec(含章节与任务清单)折叠进一张故事卡
+# 此时整个 spec(含章节)折叠进一张特性卡,挂 Epic 下
 
 priority_mapping:
   p1: "高"                     # 章节 (Priority: P1) 🎯 MVP → 高

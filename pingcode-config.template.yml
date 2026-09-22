@@ -8,25 +8,28 @@
 # 运行时通过 `pingcode context set-current-project` 解析为 project_id
 project: ""
 
+# 产品(可选,需求关联用)
+# specstoissues 触发时需要选择产品下的「需求」(idea);留空 = 每次运行交互选择
+# 解析优先级:--product 命令参数 > 此处 > 交互选择
+product: ""
+
 # 迭代(可选,留空 = 每次运行动态解析)
 # 解析优先级:--sprint 命令参数 > 此处 > context 当前迭代 > sprint list --status in_progress 自动/询问
 sprint: ""
 
 # 制品 → 工作项映射
 # 只有两级会建工作项:spec 整体、spec 的 User Story 章节。
-# Phase 与任务不建工作项,以 checklist 文本折叠进所属卡的描述。
+# Phase 与任务不建工作项,也不折叠进卡描述;任务进度只看本地 tasks.md(sync-status 收尾)。
 # 类型名以项目实际配置为准,可用 /speckit.pingcode.discover-context 查询
 mapping:
-  # SPEC.md 整体映射的工作项类型
-  # 典型值:"特性"(spec = 特性卡,章节卡挂其下)或 "用户故事"(spec = 一张故事卡)
-  # 留空 "" = spec 不建卡(此时必须配置 story_artifact,章节卡挂所选特性/史诗下)
-  spec_artifact: "用户故事"
+  # SPEC.md 整体映射的工作项类型,默认 "特性"(spec = 特性卡,挂同名 Epic 下)
+  # 留空 "" = spec 不建卡(此时必须配置 story_artifact,章节卡挂 spec 位置)
+  spec_artifact: "特性"
 
-  # spec.md 的 `### User Story N` 章节映射的工作项类型
-  # 留空 "" = 章节不建卡,全文作为正文并入 spec 卡描述
-  # 设为类型名(如 "用户故事") = 每个章节建一张卡,挂 spec 卡下;
-  #   此时 spec 卡描述只保留非 User Story 正文,章节卡保存各自内容
-  story_artifact: ""
+  # spec.md 的 `### User Story N` 章节映射的工作项类型,默认 "用户故事"
+  # 留空 "" = 章节不建卡,全文并入 spec 卡描述
+  # 设为类型名 = 每个章节建一张卡,挂 spec 卡下
+  story_artifact: "用户故事"
 
 # 章节 P1/P2/P3 → 项目优先级名(创建章节卡时使用)
 # 从章节标题尾注捕获 P 编号(如 "(Priority: P1)"、"(P1)"),按此映射设置 --priority
@@ -57,6 +60,7 @@ sync:
 
 # 环境变量覆盖(优先级高于本文件):
 #   SPECKIT_PINGCODE_PROJECT
+#   SPECKIT_PINGCODE_PRODUCT
 #   SPECKIT_PINGCODE_SPRINT
 #   SPECKIT_PINGCODE_SPEC_ARTIFACT
 #   SPECKIT_PINGCODE_STORY_ARTIFACT
