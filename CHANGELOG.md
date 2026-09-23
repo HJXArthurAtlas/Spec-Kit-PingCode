@@ -5,6 +5,14 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.4.1] - 2026-09-23
+
+### Fixed
+
+- `after_plan` hook 声明 `priority: 99`,保证建卡在所有默认优先级(10)的 after_plan hook
+  (如 adrkit.check 方案校验)之后执行——spec-kit 按 priority 升序执行 hook,同值取决于
+  注册顺序,原先不声明时排序依赖安装先后,不可靠
+
 ## [2.4.0] - 2026-09-23
 
 ### Changed
