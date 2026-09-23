@@ -197,6 +197,9 @@ pingcode idea list --product <product_id> --limit 100 --compact
         `> 来源需求: <idea identifier> <idea title>` 追溯
      b) **选择已有史诗**——按下方通用规则全量列出非终态史诗供选择
    - 亦可选择跳过该层关联(spec 卡上浮为顶层);`--epic` 参数等价于 b) 的精确匹配,命中即跳过交互
+   - ⚠️ 需求(idea)为产品域资源,与史诗之间**不存在系统内父子挂载**:实测 `relation add` 以
+     idea id 为目标返回 `100317 工作项资源不存在`(idea id 在工作项域不可解析)——
+     关联仅记录式(登记文件 `idea` 字段 + 描述注记),不要在运行时尝试 relation/parent 到需求
 
    **其他中间层(j ≥ 2,如 spec=用户故事 时的特性层)——只选已有,不代建**:
 
