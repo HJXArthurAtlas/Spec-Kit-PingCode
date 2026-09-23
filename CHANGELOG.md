@@ -5,6 +5,16 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.6.1] - 2026-09-23
+
+### Changed
+
+- hook 执行期间所有候选选择(需求/史诗/特性等)统一以表格呈现:列固定为
+  序号(#)/编号/名称/状态,回复序号、编号或精确名称即可选定
+- 新增**人选确认原则**:系统推断出的候选(spec 标题相似度、历史记录等)只能列入表格交由
+  用户确认,未经明确同意不得挂接或关联;`--idea`/`--epic`/`--product` 参数与补建沿用
+  视为已获同意
+
 ## [2.6.0] - 2026-09-23
 
 ### Added

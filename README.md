@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.6.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.6.1-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -34,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.6.0/pingcode-2.6.0.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.6.1/pingcode-2.6.1.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -117,7 +117,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 **迭代解析链**:`--sprint` 参数 > config 的 `sprint` > context 当前迭代 > `sprint list --status in_progress`(唯一命中自动选,多个列出询问,零个询问是否挂迭代)。解析结果写入映射文件,sync 不再重复询问。
 
-**动态祖先关联**:设 spec 映射在第 n 层,自顶向下确认第 1..n-1 层——需求(idea)必问;史诗层未映射时询问**新建同名史诗**或**选择已有史诗**,其余中间层只选已有。候选清单**全量列出、只剔终态**(已完成/已关闭不列),不做归属预判或父级预筛。史诗(或 spec=史诗 时的 spec 卡)与需求通过 `pingcode relation create`(通用关联,需 CLI ≥ 0.14.0)在系统内正式挂接,UI 史诗详情页"产品需求"标签可见;命令缺失或失败自动降级为记录式关联(登记文件 + 描述注记)。`--idea`/`--epic`/`--product` 按名称/identifier/id 精确匹配跳过对应交互。
+**动态祖先关联**:设 spec 映射在第 n 层,自顶向下确认第 1..n-1 层——需求(idea)必问;史诗层未映射时询问**新建同名史诗**或**选择已有史诗**,其余中间层只选已有。候选清单**全量列出、只剔终态**(已完成/已关闭不列),不做归属预判或父级预筛;候选一律以表格呈现(序号/编号/名称/状态),**关联目标必须经用户确认**——系统推断只作为候选列出,不自动生效(`--idea`/`--epic`/`--product` 参数与补建沿用视为已获同意)。史诗(或 spec=史诗 时的 spec 卡)与需求通过 `pingcode relation create`(通用关联,需 CLI ≥ 0.14.0)在系统内正式挂接,UI 史诗详情页"产品需求"标签可见;命令缺失或失败自动降级为记录式关联(登记文件 + 描述注记)。
 
 ### `/speckit.pingcode.discover-context`
 
