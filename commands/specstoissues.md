@@ -188,7 +188,17 @@ pingcode idea list --product <product_id> --limit 100 --compact
 
    展示 `identifier + title + 状态` 清单让用户选择,取所选项 `values[].id`,记录 `identifier`/`title`/`html_url`。**全量列出,不做归属预判**(不根据 spec 标题猜测"可能属于哪个需求");唯一允许的剔除:已完成/已关闭终态的需求不列出。`--idea` 参数按名称/identifier/id 精确匹配,命中即跳过交互。列表剔除后为空 → 告知并询问:核对 product 配置、跳过需求关联或中止。
 
-2. **中间工作项层(j = 1..n-1,自顶向下)——只选已有,不代建**:
+2. **中间工作项层(j = 1..n-1,自顶向下)**:
+
+   **史诗层(j = 1)——按是否被制品占据分派**:
+   - 已被映射(`spec_artifact: "史诗"`)→ 无独立史诗动作:spec 卡本身即史诗,随第 9 步直接创建
+   - 未被映射(spec 层级 ≥ 2)→ 询问用户二选一:
+     a) **新建史诗**——标题默认与所选需求同名,top-level 创建(不挂父级、不挂迭代),描述内记
+        `> 来源需求: <idea identifier> <idea title>` 追溯
+     b) **选择已有史诗**——按下方通用规则全量列出非终态史诗供选择
+   - 亦可选择跳过该层关联(spec 卡上浮为顶层);`--epic` 参数等价于 b) 的精确匹配,命中即跳过交互
+
+   **其他中间层(j ≥ 2,如 spec=用户故事 时的特性层)——只选已有,不代建**:
 
 ```bash
 pingcode workitem list --type <第 j 层类型名> --project <project_id> --limit 100
@@ -197,8 +207,7 @@ pingcode workitem list --type <第 j 层类型名> --project <project_id> --limi
    - **全量列出该类型下所有非终态工作项**,不做任何预筛或归属推断:不按上一层所选项过滤 `parent_id`、不按标题相似度猜测——层级对不对由用户自己判断
    - 唯一允许的剔除:**已完成/已关闭终态项**(对照输出中的状态字段或缓存状态字典,`state_type` 为 completed/closed 的不列出);展示 `identifier + title + 状态` 清单让用户选择其一,取 `values[].id`
    - 列表剔除后为空 → 提示先在 PingCode 创建该层工作项后重跑本命令,或选择跳过该层关联
-   - `--epic` 参数:在史诗层(n=2 时的唯一中间层)list 输出中按名称/identifier/id 精确匹配,命中即跳过该层交互
-   - 选中的工作项记入 `ancestors["<层名>"]`,并作为下一层的父级参照
+   - 选中的工作项记入 `ancestors["<层名>"]`,并作为下一层的父级参照(史诗层无论新建/选择,同样记入)
 
 3. **spec 卡挂接父级** = 最深的已选中间层工作项;中间层被跳过或 spec=史诗(无中间层)→ 省略 `--parent`(spec 卡为顶层,需求仍按记录式关联)
 

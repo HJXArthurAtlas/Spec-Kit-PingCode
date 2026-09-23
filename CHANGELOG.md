@@ -5,6 +5,14 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.5.3] - 2026-09-23
+
+### Changed
+
+- 史诗层处理按是否被制品占据分派:`spec_artifact: "史诗"` 时 spec 卡即史诗,随建卡直接创建;
+  史诗层未映射时询问**新建史诗**(名称默认与需求同名,描述记 `> 来源需求:` 追溯)或
+  **选择已有史诗**(推翻 2.5.2 的"只选已有"),仍可跳过该层关联
+
 ## [2.5.2] - 2026-09-23
 
 ### Changed

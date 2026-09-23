@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.5.2-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.5.3-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -14,7 +14,7 @@
 - **按章节模式(默认)**:`story_artifact` 配置后每个章节一张卡、内容各自携带,spec 卡只保留非章节正文
 - **章节优先级**:章节尾注 `P1/P2/P3` 经 `priority_mapping` 映射为项目优先级
 - **原生父子挂接**:PingCode `--parent` 参数,无需链接字段配置
-- **层级映射**:spec/story 映射到需求树相邻层级(史诗=1/特性=2/用户故事=3,不跳级);spec 上方的未映射祖先层自顶向下确认——需求(idea)必问,中间工作项层只选已有(`--idea`/`--epic`/`--product` 可跳过交互)
+- **层级映射**:spec/story 映射到需求树相邻层级(史诗=1/特性=2/用户故事=3,不跳级);spec 上方的未映射祖先层自顶向下确认——需求(idea)必问,史诗层询问新建同名或选已有,其余中间层只选已有(`--idea`/`--epic`/`--product` 可跳过交互)
 - **上下文发现**:探查项目的类型/状态/迭代字典,生成配置片段
 - **一键初始化**:`/speckit.pingcode.init` 交互选择项目/产品/迭代/映射类型/状态/优先级,直接生成配置文件
 - **状态同步**:本地任务全部 `[x]` 后自动收尾所属卡(单向,不回退)
@@ -34,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.2/pingcode-2.5.2.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.3/pingcode-2.5.3.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -74,7 +74,7 @@ spec-kit 制品:    SPEC.md 整体 → User Story 章节 → 任务行(task_arti
 spec_artifact + story_artifact(+ task_artifact)决定制品栈落点(必须相邻,不跳级):
 
 特性 + 用户故事(默认):
-需求(询问) → 史诗(询问:只选已有) → 特性(spec 卡) → 用户故事(story 卡)
+需求(询问) → 史诗(询问:新建同名/选已有) → 特性(spec 卡) → 用户故事(story 卡)
 
 史诗 + 特性:
 需求(询问) → 史诗(spec 卡) → 特性(story 卡) → 故事/任务(永不问)
@@ -86,7 +86,7 @@ spec_artifact + story_artifact(+ task_artifact)决定制品栈落点(必须相�
 ## - [ ] T001 任务行  →  task_artifact 配置时建任务卡挂所属卡下;未配置时仅本地 checklist
 ```
 
-规则:设 spec 位于第 n 层,第 1..n-1 层未映射祖先自顶向下确认——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级,登记于统一映射文件并在卡描述注记);中间工作项层只从已有项中选择,不代建;第 n 层以下永不询问。迭代挂在 spec/story 卡层级。
+规则:设 spec 位于第 n 层,第 1..n-1 层未映射祖先自顶向下确认——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级,登记于统一映射文件并在卡描述注记);史诗层未映射时询问**新建同名**或**选已有**,其余中间层只选已有;第 n 层以下永不询问。迭代挂在 spec/story 卡层级。
 
 ## 命令
 
@@ -117,7 +117,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 **迭代解析链**:`--sprint` 参数 > config 的 `sprint` > context 当前迭代 > `sprint list --status in_progress`(唯一命中自动选,多个列出询问,零个询问是否挂迭代)。解析结果写入映射文件,sync 不再重复询问。
 
-**动态祖先关联**:设 spec 映射在第 n 层,自顶向下确认第 1..n-1 层——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级;登记于统一映射文件并在卡描述注记 `> 来源需求:`);中间工作项层(如史诗)只从已有项中选择,不代建。候选清单**全量列出、只剔终态**(已完成/已关闭不列),不做归属预判或父级预筛。`--idea`/`--epic`/`--product` 按名称/identifier/id 精确匹配跳过对应交互。
+**动态祖先关联**:设 spec 映射在第 n 层,自顶向下确认第 1..n-1 层——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级;登记于统一映射文件并在卡描述注记 `> 来源需求:`);史诗层未映射时询问**新建同名史诗**或**选择已有史诗**(新建的描述内记来源需求),其余中间层只选已有。候选清单**全量列出、只剔终态**(已完成/已关闭不列),不做归属预判或父级预筛。`--idea`/`--epic`/`--product` 按名称/identifier/id 精确匹配跳过对应交互。
 
 ### `/speckit.pingcode.discover-context`
 
