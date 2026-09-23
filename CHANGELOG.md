@@ -5,6 +5,14 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.5.2] - 2026-09-23
+
+### Changed
+
+- 需求/中间层(如史诗)选择清单**全量列出**:不做归属预判(不按 spec 标题猜测所属需求)、
+  不按上一层所选项预筛 `parent_id`;唯一剔除是已完成/已关闭终态项;
+  清单展示增加状态列
+
 ## [2.5.1] - 2026-09-23
 
 ### Fixed

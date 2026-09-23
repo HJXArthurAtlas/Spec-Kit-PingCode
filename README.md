@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.5.1-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.5.2-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -34,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.1/pingcode-2.5.1.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.2/pingcode-2.5.2.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -117,7 +117,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 **迭代解析链**:`--sprint` 参数 > config 的 `sprint` > context 当前迭代 > `sprint list --status in_progress`(唯一命中自动选,多个列出询问,零个询问是否挂迭代)。解析结果写入映射文件,sync 不再重复询问。
 
-**动态祖先关联**:设 spec 映射在第 n 层,自顶向下确认第 1..n-1 层——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级;登记于统一映射文件并在卡描述注记 `> 来源需求:`);中间工作项层(如史诗)只从已有项中选择,不代建;第 n 层以下永不询问。`--idea`/`--epic`/`--product` 按名称/identifier/id 精确匹配跳过对应交互。
+**动态祖先关联**:设 spec 映射在第 n 层,自顶向下确认第 1..n-1 层——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级;登记于统一映射文件并在卡描述注记 `> 来源需求:`);中间工作项层(如史诗)只从已有项中选择,不代建。候选清单**全量列出、只剔终态**(已完成/已关闭不列),不做归属预判或父级预筛。`--idea`/`--epic`/`--product` 按名称/identifier/id 精确匹配跳过对应交互。
 
 ### `/speckit.pingcode.discover-context`
 
