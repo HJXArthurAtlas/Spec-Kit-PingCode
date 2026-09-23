@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.5.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.5.1-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -9,7 +9,7 @@
 ## 功能
 
 - **最多三级映射**:SPEC.md 整体、`### User Story N` 章节、任务行(`task_artifact`,可选)建工作项卡;Phase 永不建卡、不进卡描述
-- **任务卡**:`task_artifact` 配置后每个任务行建卡挂所属 story/spec 卡下,由 `after_tasks` hook 在 `/speckit.tasks` 后补建;本地勾选后由 sync-status 按配置流转
+- **任务卡**:`task_artifact` 配置后每个任务行建卡挂所属 story/spec 卡下,由 `after_tasks` hook 在 `/speckit.tasks` 后补建(condition 门控:未配置 `task_artifact` 时 hook 不触发);本地勾选后由 sync-status 按配置流转
 - **单卡模式**:只配 `spec_artifact`,整个 spec(含章节)折叠进一张卡
 - **按章节模式(默认)**:`story_artifact` 配置后每个章节一张卡、内容各自携带,spec 卡只保留非章节正文
 - **章节优先级**:章节尾注 `P1/P2/P3` 经 `priority_mapping` 映射为项目优先级
@@ -34,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.0/pingcode-2.5.0.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.1/pingcode-2.5.1.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -146,7 +146,7 @@ sprint: ""                    # 可选,留空走运行时解析链
 mapping:
   spec_artifact: "特性"        # SPEC.md 整体的映射类型(需求树第 2 层,挂所选史诗下)
   story_artifact: "用户故事"   # 必须为 spec 的紧邻下一层;空=章节并入 spec 卡描述
-  task_artifact: ""            # 空=任务仅本地 checklist;设 "任务" 等类型名=任务行建卡
+  # task_artifact: "任务"       # 可选:配置后任务行建卡(after_tasks hook 随之生效);不配置=仅本地 checklist
 
 priority_mapping:
   p1: "高"                     # 章节 P1/P2/P3 → 优先级名

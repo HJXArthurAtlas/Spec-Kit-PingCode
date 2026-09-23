@@ -67,8 +67,9 @@ pingcode product list --compact
 
 - `spec_artifact`:推荐 `group=requirement` 中名称含「特性/feature」的类型
 - `story_artifact`:推荐「用户故事/story」类;用户可选择"不按章节建卡"(写空字符串)
-- `task_artifact`:可选,推荐 `group=task` 中「任务/task」类;留空 = 任务不建卡(仅本地 checklist)。
-  配置后任务行建任务卡挂所属 story/spec 卡下,勾选流转受 `sync.complete_story_when_tasks_done` 控制
+- `task_artifact`:可选,推荐 `group=task` 中「任务/task」类;不选 = 任务不建卡(仅本地 checklist),
+  且 after_tasks hook 不触发(hook 以 `config.mapping.task_artifact is set` 为触发条件,键不存在不生效)。
+  选定后任务行建任务卡挂所属 story/spec 卡下,勾选流转受 `sync.complete_story_when_tasks_done` 控制
 - 两者皆空 → 提示至少配置一项,回到本步重选
 
 **需求树层级归类**(specstoissues 据此确定要确认的祖先层,层级:史诗=1/特性=2/用户故事=3/任务=4):
@@ -142,7 +143,9 @@ sprint: "<选定迭代 或 空>"
 mapping:
   spec_artifact: "<选定>"
   story_artifact: "<选定 或 空>"
-  task_artifact: "<选定 或 空>"
+  # task_artifact 仅在用户选定任务映射时写入该键(不选则整个键不出现,
+  # after_tasks hook 的 condition 才不会误触发):
+  # task_artifact: "<选定>"
   # 仅当存在非规范名类型时由 init 写入层级归类,如:
   # type_levels:
   #   模块: 2

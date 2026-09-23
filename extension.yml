@@ -4,7 +4,7 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.5.0"
+  version: "2.5.1"
   description: "Create PingCode requirement tree (idea → epic → feature + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
@@ -57,6 +57,9 @@ hooks:
     command: "speckit.pingcode.specstoissues"
     optional: true
     priority: 99
+    # 仅当配置文件存在 mapping.task_artifact 键(init 选定任务映射后写入)时触发;
+    # 未配置时本 hook 完全不生效,任务停留在本地 checklist
+    condition: "config.mapping.task_artifact is set"
     prompt: "根据 tasks.md 补建任务卡?"
     description: "task_artifact 已配置时,在 /speckit.tasks 生成后补建任务卡(幂等,已存在的卡片不重建)"
 

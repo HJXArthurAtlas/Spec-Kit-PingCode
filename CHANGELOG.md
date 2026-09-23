@@ -5,6 +5,15 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.5.1] - 2026-09-23
+
+### Fixed
+
+- `after_tasks` hook 增加 `condition: "config.mapping.task_artifact is set"`:未配置任务映射时
+  hook 完全不触发(此前 `condition: null` 会在每次 `/speckit.tasks` 后弹窗并空转一轮)
+- 配置模板默认注释 `task_artifact` 键(spec-kit 的 `is set` 判定对空字符串也为真,
+  键不存在才不触发);`init` 仅在用户选定任务映射时写入该键
+
 ## [2.5.0] - 2026-09-23
 
 ### Added
