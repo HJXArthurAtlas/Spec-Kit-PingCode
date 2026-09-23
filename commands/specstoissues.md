@@ -197,9 +197,17 @@ pingcode idea list --product <product_id> --limit 100 --compact
         `> 来源需求: <idea identifier> <idea title>` 追溯
      b) **选择已有史诗**——按下方通用规则全量列出非终态史诗供选择
    - 亦可选择跳过该层关联(spec 卡上浮为顶层);`--epic` 参数等价于 b) 的精确匹配,命中即跳过交互
-   - ⚠️ 需求(idea)为产品域资源,与史诗之间**不存在系统内父子挂载**:实测 `relation add` 以
-     idea id 为目标返回 `100317 工作项资源不存在`(idea id 在工作项域不可解析)——
-     关联仅记录式(登记文件 `idea` 字段 + 描述注记),不要在运行时尝试 relation/parent 到需求
+   - **需求挂接(史诗确定后必做)**:史诗与需求通过通用关联端点在系统内正式挂接:
+
+```bash
+pingcode relation create \
+  --principal-type workitem --principal-id <史诗 id> \
+  --target-type idea --target-id <idea_id>
+```
+
+     需要 pingcode CLI ≥ 0.14.0;成功后 UI 史诗详情页"产品需求"标签即显示该需求。
+     命令不存在(旧版 CLI)或失败 → 降级为记录式关联(登记文件 `idea` 字段 + 描述注记),
+     在 `errors[]` 记一行,不阻断建卡。spec=史诗时,本步在第 9 步 spec 卡创建完成后执行
 
    **其他中间层(j ≥ 2,如 spec=用户故事 时的特性层)——只选已有,不代建**:
 
@@ -370,6 +378,7 @@ pingcode workitem create \
 
 - `status`:`created` 或 `failed`(原因记入 `errors[]`,`card` 为 `null`);无条目 = 制品未生成
 - 跳过需求关联 → `idea` 为 `null`;无中间层或跳过 → `ancestors` 为 `{}`
+- 需求挂接失败降级记录式时,`errors[]` 记一行;`idea` 字段无论挂接成败均记录
 - 单卡模式 `stories` 为 `[]`,章节全文并入 spec 卡;`task_artifact` 未配置或 tasks.md 未生成时 `tasks` 为 `[]`
 - `tasks[]` 以 `task_id` 为键;sync-status 从 `tasks.md` 解析勾选与归属,流转任务卡并回写各卡 `state`/`state_type`
 

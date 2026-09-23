@@ -5,7 +5,18 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-## [2.5.3] - 2026-09-23
+## [2.6.0] - 2026-09-23
+
+### Added
+
+- 史诗(及 spec=史诗 时的 spec 卡)与需求(idea)自动建立**系统内关联**:通过通用关联端点
+  `pingcode relation create --principal-type workitem --target-type idea`
+  (需 pingcode CLI ≥ 0.14.0,该版本新增 `relation create` 通用关联子命令);
+  命令缺失或失败自动降级为记录式关联,不阻断建卡。
+  此前 2.5.4 记录的"无挂载通道"结论修正:挂载走 `/v1/relations` 通用端点,
+  而非 `/v1/pjm/work_items/{id}/relations`(后者仅限工作项目标)
+
+## [2.5.4] - 2026-09-23
 
 ### Changed
 
