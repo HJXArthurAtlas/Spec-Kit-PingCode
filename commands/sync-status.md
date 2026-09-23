@@ -12,7 +12,7 @@ description: "本地任务全部勾选后,将对应的 PingCode 卡片流转到�
 
 1. `pingcode` CLI 已安装且已认证
 2. 卡片已通过 `/speckit.pingcode.specstoissues` 创建
-3. 映射文件存在:`specs/<spec-name>/pingcode-mapping.json`
+3. 统一映射登记存在且含该 spec 条目:`specs/pingcode-mapping.json`(旧版按 spec 分散的 `specs/<name>/pingcode-mapping.json` 由 specstoissues 运行时自动迁移)
 4. `tasks.md` 中有完成标记
 
 ## 用户输入
@@ -30,9 +30,9 @@ $ARGUMENTS
 按优先级:
 
 1. `--spec <name>` 参数
-2. git 分支名匹配且存在 `specs/<分支名>/pingcode-mapping.json`
+2. git 分支名匹配且统一登记含该 spec 条目
 3. 当前目录在 `specs/<name>/` 内
-4. `specs/` 下恰有一个含 `pingcode-mapping.json` 的 spec;多个则列出让用户选择,0 个则报错提示先运行 `/speckit.pingcode.specstoissues`
+4. 统一登记 `specs/pingcode-mapping.json` 的 `specs` 下恰有一个条目 → 直接使用;多个条目则列出让用户选择,0 个则报错提示先运行 `/speckit.pingcode.specstoissues`
 
 ### 2. 环境自检
 
@@ -62,7 +62,7 @@ pingcode context list
 | spec-story | spec 卡 | 不自动收尾 |
 | spec-only | spec 卡 | 全部任务 |
 
-逐卡核对该卡当前状态(`mode`、`spec_card`、`stories` 读自映射文件):
+逐卡核对该卡当前状态(`mode`、`artifacts.spec`、`artifacts.stories` 读自统一登记条目):
 
 ```bash
 pingcode workitem get <identifier> --compact
@@ -106,7 +106,7 @@ pingcode workitem update <identifier> --state "<status_mapping.completed>"
 }
 ```
 
-同时更新映射文件中各卡的 `state` 字段与 `updated_at`。
+同时回写统一登记 `specs/pingcode-mapping.json` 中该 spec 条目里各卡的 `state`/`state_type` 与条目 `updated_at`。
 
 ### 8. 输出总结
 

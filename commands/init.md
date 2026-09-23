@@ -61,13 +61,21 @@ pingcode product list --compact
 
 选定 → `product: "<产品名称>"`;跳过 → `product: ""`。名称/标识符与 ID 的对应以 `product list` 输出为准,不猜测。
 
-### 4. 选择映射类型
+### 4. 选择映射类型(含需求树层级校验)
 
 从缓存 `work_item_types["<project_id>"].values[]` 列出全部类型(`id`/`name`/`group`)让用户选择:
 
-- `spec_artifact`:推荐 `group=requirement` 中名称含「特性/feature」的类型(spec = 特性卡,挂同名 Epic 下)
+- `spec_artifact`:推荐 `group=requirement` 中名称含「特性/feature」的类型
 - `story_artifact`:推荐「用户故事/story」类;用户可选择"不按章节建卡"(写空字符串)
 - 两者皆空 → 提示至少配置一项,回到本步重选
+
+**需求树层级归类**(specstoissues 据此确定要确认的祖先层,层级:史诗=1/特性=2/用户故事=3):
+
+- 规范名(含「史诗/epic」「特性/feature」「用户故事/story」)自动归类
+- 非规范名 → 询问用户该类型归属第几层,并把 `<类型名>: <层>` 写入配置 `mapping.type_levels`(运行时识别用)
+- spec/story 必须落在相邻层级(不跳级):`story_artifact` 非空时其层级必须 = spec 层级 + 1,
+  违例(如 spec=史诗 + story=用户故事,中间跳过特性)→ 说明父子链会断裂,回到本步重选
+- spec=用户故事(第 3 层)时无下一层可用 → `story_artifact` 必须留空(单卡模式)
 
 ### 5. 选择收尾状态名
 
@@ -82,7 +90,7 @@ pingcode product list --compact
 - `priority_mapping.p1/p2/p3`:名称含「高/紧急」「中」「低」时自动建议对应档位,否则让用户逐档指定
 - 项目无多级优先级概念 → 三档全部留空
 
-### 7. 选择迭代并补全运行上下文
+### 7. 选择迭代并初始化 CLI 运行时上下文
 
 ```bash
 pingcode sprint list <project_id> --status in_progress
@@ -94,19 +102,29 @@ pingcode sprint list <project_id> --status in_progress
 
 选定 → `sprint: "<迭代名称>"`;留空 → `sprint: ""`
 
-随后补全运行上下文——`workitem create` 硬性要求 context 含当前用户与当前迭代,缺失会拒绝执行:
+**CLI 运行时上下文初始化——本步总是执行:已有偏好时做校验与修复,不静默跳过**(偏好存在不代表
+新鲜或完整;`workitem create` 硬性要求 context 含当前用户与当前迭代,缺失会拒绝执行):
 
 1. 取当前用户 id:`pingcode directory me`
-2. 迭代已定 → 一次管道喂齐三项(顺序:项目 → 迭代 → 用户,均可传编号或 ID):
+2. 写入偏好:
+   - 迭代已定 → 一次管道喂齐三项(顺序固定:项目 → 迭代 → 用户,均可传编号或 ID),顺带保证
+     sprints/users 字典完整:
 
 ```bash
 printf '<项目>\n<迭代ID>\n<用户ID>\n' | pingcode context init
 ```
 
-   迭代留空 → 项目已由第 2 步设置,只补用户:`pingcode context set-current-user <用户ID>`
-3. 校验:`pingcode context list` 的 `preferences` 应含 `current_project_id`、`current_user_id`(迭代已定则还有 `current_sprint_id`)
+   - 迭代留空 → 项目已由第 2 步设置,只补用户:`pingcode context set-current-user <用户ID>`
+3. 迭代留空时的残留校验(必做):检查 `context list` 的 `preferences.current_sprint_id`——
+   - 无残留 → 回显"迭代将每次动态解析"
+   - 有残留 → 对照缓存 sprints 字典查其状态:仍 `in_progress` → 回显并确认沿用;
+     非进行中或查不到 → **不得静默保留**:`pingcode context set-current-sprint <最新进行中迭代ID>`
+     更新,或经用户明确接受"context 残留会优先于动态解析"的风险
+4. 字典校验:`context list` 中类型/状态/优先级/sprints 字典非空;为空 → 类型/状态/优先级重跑第 2 步
+   `set-current-project`,sprints/users 重跑上面的管道 `context init`
+5. 终态校验:`preferences` 应含 `current_project_id`、`current_user_id`(迭代已定则还有 `current_sprint_id`)
 
-完成后,`/speckit.pingcode.specstoissues` 运行时不再需要补建上下文。
+完成后回显 context 终态;`/speckit.pingcode.specstoissues` 运行时不再需要补建上下文。
 
 ### 8. 生成配置
 
@@ -120,6 +138,9 @@ sprint: "<选定迭代 或 空>"
 mapping:
   spec_artifact: "<选定>"
   story_artifact: "<选定 或 空>"
+  # 仅当存在非规范名类型时由 init 写入层级归类,如:
+  # type_levels:
+  #   模块: 2
 
 priority_mapping:
   p1: "<...>"
@@ -151,6 +172,7 @@ sync:
    产品: <名称 或 运行时选择>
    spec 卡: <spec_artifact>   story 卡: <story_artifact 或 不建>
    收尾状态: <completed 名>   迭代: <名 或 运行时解析>
+   上下文: 用户 <名> ✓   当前迭代: <名 或 动态解析>   字典: ✓
 ```
 
 ### 9. 下一步

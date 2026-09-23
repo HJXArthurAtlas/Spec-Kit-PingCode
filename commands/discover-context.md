@@ -100,7 +100,7 @@ priority_mapping:
   p3: "<如 低>"
 ```
 
-`spec_artifact` 优先推荐 `特性`(spec 卡挂同名 Epic 下,章节卡挂 spec 卡下,构成 需求 → Epic → 特性 → 用户故事 层级);项目无特性类型时推荐 `用户故事`。优先级名取 `work_item_priorities` 字典实际值;项目无多级优先级概念时全部留空。
+`spec_artifact` 优先推荐 `特性`(需求树第 2 层,spec 卡挂所选史诗下,章节卡挂 spec 卡下,构成 需求 → 史诗 → 特性 → 用户故事 层级);项目无特性类型时推荐 `用户故事`(此时 `story_artifact` 必须留空)。优先级名取 `work_item_priorities` 字典实际值;项目无多级优先级概念时全部留空。
 
 ### 7. 保存探查结果
 

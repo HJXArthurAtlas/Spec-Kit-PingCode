@@ -1,14 +1,15 @@
 ---
-description: "将 spec-kit 的 spec 转换为 PingCode 需求树卡片(需求 → Epic → 特性 → 用户故事)"
+description: "将 spec-kit 的 spec 转换为 PingCode 需求树卡片(层级映射可配置,向上只补未映射祖先层)"
 ---
 
 # 从 Spec 创建 PingCode 卡片层级
 
-本命令把 spec-kit 产物转换为 PingCode 卡片层级(通过 `pingcode` CLI,不依赖 MCP):
+本命令把 spec-kit 产物转换为 PingCode 需求树卡片(通过 `pingcode` CLI,不依赖 MCP):
 
-- **仅两级建卡**:SPEC.md 整体(`mapping.spec_artifact`)与 `### User Story N` 章节(`mapping.story_artifact`)可映射为工作项卡
+- **两级建卡**:SPEC.md 整体(`mapping.spec_artifact`)与 `### User Story N` 章节(`mapping.story_artifact`)映射为工作项卡;两个映射必须落在需求树**相邻层级**(不跳级),任务与 Phase 永不建卡
+- **动态祖先关联**:设 spec 卡位于需求树第 n 层(史诗=1/特性=2/用户故事=3),第 1..n-1 层为未映射祖先——需求(idea)必问;中间工作项层**只从已有项中选择**,不代建;第 n 层以下永不询问、永不建卡
 - **任务不进卡片**:Phase 与任务永不建工作项,也不折叠进卡描述;任务进度只存在于本地 `tasks.md`,由 `/speckit.pingcode.sync-status` 据此收尾
-- **需求关联**:先选择产品下的「需求」(idea),自动查找/创建同名 Epic,spec 卡挂 Epic 下、US 章节卡挂 spec 卡下,呈现 需求 → Epic → 特性 → 用户故事 层级
+- **统一映射登记**:所有 spec 的映射集中登记在 `specs/pingcode-mapping.json`(制品生成状态、卡片 id、卡片状态),不再按 spec 分散存文件
 
 所有操作通过 bash 执行 `pingcode` CLI 完成。**严格遵守:禁止猜测任何 ID;所有名称先解析为 ID 再执行写操作。**
 
@@ -30,6 +31,7 @@ $ARGUMENTS
 - `--sprint <名称或ID>`:指定迭代;缺省时走迭代解析链
 - `--product <名称/ID>`:指定需求所在产品;缺省时读配置,再缺省交互选择
 - `--idea <名称/identifier/ID>`:指定关联的需求;缺省时交互选择
+- `--epic <名称/identifier/ID>`:指定挂靠的已有史诗(spec 位于特性层时的唯一中间层);缺省时交互选择
 - `--dry-run`:只输出将要执行的创建计划,不实际调用写接口
 
 ## 步骤
@@ -92,16 +94,20 @@ printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 | `sprint` | `SPECKIT_PINGCODE_SPRINT` | `""` |
 | `mapping.spec_artifact` | `SPECKIT_PINGCODE_SPEC_ARTIFACT` | `特性` |
 | `mapping.story_artifact` | `SPECKIT_PINGCODE_STORY_ARTIFACT` | `用户故事` |
+| `mapping.type_levels` | 无 | 内置规范表(见第 5 步) |
 | `status_mapping.completed` | `SPECKIT_PINGCODE_STATUS_COMPLETED` | `已完成` |
 | `priority_mapping.p1/p2/p3` | `SPECKIT_PINGCODE_PRIORITY_{P1,P2,P3}` | 高/中/低 |
 
 确定模式:
 
 ```
+spec 层级 n   = mapping.spec_artifact 在需求树中的层级(第 5 步解析)
+story 卡  = story_artifact 非空:每个 `### User Story N` 章节建一张卡,挂 spec 卡下;
+            其层级必须为 n+1,否则终止(不跳级)
 spec 卡   = spec_artifact 非空:整个 spec 建一张卡
-story 卡  = story_artifact 非空:每个 `### User Story N` 章节建一张卡,挂 spec 卡(若有)下
 两者皆空  = 终止:没有任何映射目标
-任务与 Phase = 永不进卡片:不建工作项、不折叠进描述;进度只看本地 tasks.md
+祖先层    = 第 1..n-1 层未被制品映射的层,第 8 步逐层确认;第 n 层以下永不询问
+任务与 Phase = 永不建卡,进度只看本地 tasks.md
 ```
 
 ### 4. 解析项目与迭代
@@ -112,7 +118,7 @@ story 卡  = story_artifact 非空:每个 `### User Story N` 章节建一张卡,
 
 1. `--sprint` 参数(名称或 ID;名称用 `pingcode sprint list <project_id>` 按 name 匹配解析为 ID)
 2. config 的 `sprint`
-3. `pingcode context list` 的 `preferences.current_sprint_id`(若有)
+3. `pingcode context list` 的 `preferences.current_sprint_id`(若有)——**先校验状态**:从缓存 `sprints` 字典查该 ID 的 `status`,仅 `in_progress` 时采用;已结束或查不到 → 输出提示并跳到下一级,不得隐式挂到残留的已完成迭代
 4. 动态发现:`pingcode sprint list <project_id> --status in_progress`
    - 恰好 1 个进行中 → 自动选用并向用户回显
    - 多个 → 列出(名称/编号/日期)让用户选择
@@ -120,15 +126,17 @@ story 卡  = story_artifact 非空:每个 `### User Story N` 章节建一张卡,
 
 解析结果必须为 sprint ID(`sprint list` 输出 `values[].id`)。用户明确选择"不挂迭代"时,创建命令省略 `--sprint`。
 
-### 5. 解析类型名 → 类型 ID
+### 5. 解析类型与需求树层级
 
-从 `.pingcode/cache.json` 的 `work_item_types["<project_id>"].values[]` 按名称精确匹配:
+**层级表**:规范名内置 `史诗=1 / 特性=2 / 用户故事=3`;配置 `mapping.type_levels`(init 对非规范类型名的归类结果)优先覆盖。spec 与 story 的层级:
 
-- `mapping.spec_artifact` → spec_type_id(非空时必解析)
-- `mapping.story_artifact` → story_type_id(非空时必解析)
-- Epic 类型:按 `group=requirement` 且名称含「史诗/epic」定位 epic_type_id;无此名 → 列出全部 requirement 类型让用户指认充当 Epic,或中止并引导运行 `/speckit.pingcode.discover-context`
+- `mapping.spec_artifact` → spec_type_id,层级 n
+- `mapping.story_artifact` → story_type_id(非空时),层级必须 = n+1
+- **不跳级校验**:story 层级 ≠ n+1 → 终止,引导 `/speckit.pingcode.init` 修正映射;spec=用户故事(第 3 层)时无下一层可用,story_artifact 必须为空(单卡模式)
 
-任一名称匹配失败 → 终止,引导运行 `/speckit.pingcode.discover-context` 查看该项目实际类型名,修正配置后重试。**禁止用不存在的类型名调用创建接口。**
+任一类型名匹配失败 → 终止,引导运行 `/speckit.pingcode.discover-context` 查看该项目实际类型名,修正配置后重试。**禁止用不存在的类型名调用创建接口。**
+
+祖先层类型(第 8 步用):第 j 层的类型名 = `type_levels`/规范表中层级为 j 的名称;同层多个类型 → 列出让用户指认。
 
 ### 6. 解析 SPEC.md
 
@@ -148,64 +156,48 @@ spec 卡(spec_artifact 非空时):
 
 ### 7. 幂等检查
 
-若 `specs/<name>/pingcode-mapping.json` 已存在:展示现有映射摘要(需求/Epic 与各卡 identifier 及状态),询问用户:
+统一映射文件 `specs/pingcode-mapping.json` 中该 spec 的条目为登记单元:
 
-1. **补建**——跳过已有 identifier 的条目,只创建缺失的;映射文件已含 `idea`/`epic` 时沿用,不重选需求、不重建 Epic
-2. **重建**——忽略旧映射全部重建(会在 PingCode 产生重复,需用户明确确认)
-3. **中止**——退出,让用户人工处理
+- 旧版 `specs/<name>/pingcode-mapping.json` 存在且统一文件无此条目 → **自动迁移**(spec_card→artifacts.spec、stories[]→artifacts.stories、epic→ancestors.史诗),写回统一文件后删除旧文件并回显
+- 条目已存在:展示登记摘要(需求/祖先/各卡 identifier 与状态),询问用户:
+  1. **补建**——跳过已有 identifier 的制品,只创建缺失的;条目已含 `idea`/`ancestors` 时沿用,不重选需求、不重选祖先
+  2. **重建**——忽略旧登记全部重建(会在 PingCode 产生重复,需用户明确确认)
+  3. **中止**——退出,让用户人工处理
 
-默认建议补建。不存在映射文件则直接继续。
+默认建议补建。无条目则直接继续。
 
-### 8. 选择需求并关联 Epic(交互)
+### 8. 关联祖先层(按 spec 层级动态确认)
 
-spec 卡的挂接父卡由所选需求派生:
+设 spec 层级为 n,自顶向下确认第 1..n-1 层:
 
-**前置**:第 7 步选择了"补建"且映射文件已含 `idea`/`epic` → 跳过本步,沿用已记录的需求与 Epic。
+**前置**:第 7 步选择了"补建"且登记条目已含 `idea`/`ancestors` → 跳过本步,沿用已记录的关联。
 
-1. 解析产品(product 解析链,高 → 低):
+1. **需求(idea,必问)**——记录式关联(产品域实体,不作工作项父级):
 
-   1. `--product` 参数(名称或 ID;`pingcode product list --compact` 输出中精确匹配取 `values[].id`)
-   2. config 的 `product`(同样解析为 ID)
-   3. 交互:`pingcode product list --compact` 列出全部产品(名称/标识符)让用户选择
-
-   解析失败 → 列出全部产品供重选;仍无法确定 → 询问跳过需求关联或中止。
-
-2. 选择需求:
+   1. 解析产品(product 解析链,高 → 低):`--product` 参数 > config 的 `product` > 交互 `pingcode product list --compact` 选择;名称精确匹配取 `values[].id`,并记录 `values[].name` 供登记
+   2. 选择需求:
 
 ```bash
 pingcode idea list --product <product_id> --limit 100 --compact
 ```
 
-   展示 `identifier + title` 清单让用户选择,取所选项 `values[].id` 为 idea_id,记录 `identifier`、`title`、`html_url`。`--idea` 参数按名称/identifier/id 精确匹配,命中即跳过交互。列表为空 → 告知并询问:检查 product 配置、跳过需求关联或中止。
+   展示 `identifier + title` 清单让用户选择,取所选项 `values[].id`,记录 `identifier`/`title`/`html_url`。`--idea` 参数按名称/identifier/id 精确匹配,命中即跳过交互。列表为空 → 告知并询问:核对 product 配置、跳过需求关联或中止。
 
-3. find-or-create 同名 Epic:
-
-```bash
-pingcode workitem list --type <史诗类型名> --project <project_id> --limit 100
-```
-
-   在输出 `values[]` 中按标题与所选需求的 title **精确匹配**:
-
-   - 命中 → 复用其 `values[].id` 为 epic_id,回显 `<identifier> - <标题>(复用)`
-   - 未命中 → 创建(Epic 不挂迭代、不挂父卡):
+2. **中间工作项层(j = 1..n-1,自顶向下)——只选已有,不代建**:
 
 ```bash
-pingcode workitem create \
-  --title "<idea title>" \
-  --type <epic_type_id> \
-  --project <project_id> \
-  --description "> 来源需求: <idea identifier> <idea title>
-<idea url>"
+pingcode workitem list --type <第 j 层类型名> --project <project_id> --limit 100
 ```
 
-   多个 spec 关联同一需求时,同名 Epic 复用同一张,不会重复创建。
+   - 展示 `identifier + title` 清单让用户选择其一,取 `values[].id`
+   - 上一层已选工作项时过滤列表:筛 `parent_id` 指向上一层所选项(如特性层筛 parent=所选史诗);筛完为空 → 展示该层全部已有项并注明"无挂在其下的",仍由用户确认
+   - 列表为空 → 提示先在 PingCode 创建该层工作项后重跑本命令,或选择跳过该层关联
+   - `--epic` 参数:在史诗层(n=2 时的唯一中间层)list 输出中按名称/identifier/id 精确匹配,命中即跳过该层交互
+   - 选中的工作项记入 `ancestors["<层名>"]`,并作为下一层的父级参照
 
-4. 确定挂接目标:
+3. **spec 卡挂接父级** = 最深的已选中间层工作项;中间层被跳过或 spec=史诗(无中间层)→ 省略 `--parent`(spec 卡为顶层,需求仍按记录式关联)
 
-   - 选定需求 → `parent_ref = epic_id`(spec 卡挂 Epic 下;US 章节卡固定挂 spec 卡下)
-   - 跳过需求关联 → 建卡时省略 `--parent`
-
-`--dry-run`:在创建计划中回显 `<idea identifier> - <title>` 与 Epic 复用/新建计划,不执行创建。
+`--dry-run`:在创建计划中回显 `<idea identifier> - <title>` 与各祖先层选择(或跳过),不执行创建。
 
 ### 9. 创建 spec 卡(spec_artifact 非空时)
 
@@ -213,6 +205,7 @@ pingcode workitem create \
 
 ```markdown
 > 来源: specs/<name>/spec.md (spec-kit)
+> 来源需求: <idea identifier> <idea title>(关联需求时)
 
 <spec 正文;story_artifact 非空时剔除 User Story 章节正文>
 ```
@@ -230,11 +223,11 @@ pingcode workitem create \
   --project <project_id> \
   --sprint <sprint_id> \
   --priority "<config.defaults.spec.priority>" \
-  --parent <epic_id,第 8 步解析结果> \
+  --parent <最深祖先工作项 id,第 8 步解析结果> \
   --description "$desc"
 ```
 
-(`--priority`/`--sprint`/`--parent` 按解析结果省略可选项;"跳过需求关联"时省略 `--parent`。spec_artifact 为空 → 跳过本步,章节卡直接挂 `parent_ref`。)
+(`--priority`/`--sprint`/`--parent` 按解析结果省略可选项;无工作项父级时省略 `--parent`。spec_artifact 为空 → 跳过本步,章节卡直接挂最深祖先。)
 
 从 JSON 输出提取 `id`、`identifier`、`html_url` 并回显:
 
@@ -245,7 +238,7 @@ pingcode workitem create \
 
 ### 10. 创建章节卡(story_artifact 非空时)
 
-对每个 `### User Story N` 章节,挂到 spec 卡(第 9 步,若有)或 `parent_ref` 下:
+对每个 `### User Story N` 章节,挂到 spec 卡(第 9 步,若有)或最深祖先下:
 
 ```bash
 pingcode workitem create \
@@ -254,7 +247,7 @@ pingcode workitem create \
   --project <project_id> \
   --sprint <sprint_id> \
   --priority "<章节优先级,解析链见下>" \
-  --parent <spec_card_id 或 parent_ref> \
+  --parent <spec_card_id 或最深祖先> \
   --description "Story from spec: <name>
 US: US<N> - <章节标题>
 
@@ -267,61 +260,67 @@ US: US<N> - <章节标题>
 
 story_artifact 为空 → 跳过本步,章节全文已随 spec 卡描述折叠。
 
-### 11. 写入映射文件
+### 11. 写统一映射登记文件
 
-写 `specs/<name>/pingcode-mapping.json`:
+写 `specs/pingcode-mapping.json`(文件已存在时仅更新本 spec 条目,其他条目原样保留):
 
 ```json
 {
-  "created_at": "<ISO8601>",
+  "version": 1,
   "updated_at": "<ISO8601>",
-  "spec": "<name>",
-  "project_id": "<id>",
-  "project_name": "<名>",
-  "product_id": "<id 或 null>",
-  "sprint_id": "<id 或 null>",
-  "sprint_name": "<名 或 null>",
-  "mode": "spec-only | spec-story",
-  "idea": {
-    "id": "<id>",
-    "identifier": "<identifier>",
-    "title": "<标题>",
-    "url": "<html_url>"
-  },
-  "epic": {
-    "id": "<id>",
-    "identifier": "<identifier>",
-    "title": "<同名标题>",
-    "url": "<html_url>",
-    "state": "<当前状态名>"
-  },
-  "spec_card": {
-    "id": "<id>",
-    "identifier": "<identifier>",
-    "title": "<标题>",
-    "url": "<html_url>",
-    "state": "<当前状态名>",
-    "priority": "<设置的优先级名 或 null>"
-  },
-  "stories": [
-    {
-      "us_no": "US1",
-      "title": "US1 - <章节标题>",
-      "id": "<id>",
-      "identifier": "<identifier>",
-      "url": "<html_url>",
-      "state": "<当前状态名>",
-      "priority": "<设置的优先级名 或 null>"
+  "specs": {
+    "<spec-name>": {
+      "updated_at": "<ISO8601>",
+      "project_id": "<id>",
+      "project_name": "<名>",
+      "product_id": "<id 或 null>",
+      "product_name": "<名 或 null>",
+      "sprint_id": "<id 或 null>",
+      "sprint_name": "<名 或 null>",
+      "mode": "spec-only | spec-story",
+      "idea": {
+        "id": "<id>",
+        "identifier": "<identifier>",
+        "title": "<标题>",
+        "url": "<html_url>"
+      },
+      "ancestors": {
+        "史诗": { "id": "<id>", "identifier": "<identifier>", "title": "<标题>", "url": "<html_url>" }
+      },
+      "artifacts": {
+        "spec": {
+          "title": "<标题>",
+          "status": "created",
+          "card": {
+            "id": "<id>",
+            "identifier": "<identifier>",
+            "title": "<标题>",
+            "type": "<spec_artifact 类型名>",
+            "url": "<html_url>",
+            "state": "<当前状态名>",
+            "state_type": "<pending|started|completed|closed>",
+            "priority": "<设置的优先级名 或 null>"
+          }
+        },
+        "stories": [
+          {
+            "us_no": "US1",
+            "title": "US1 - <章节标题>",
+            "status": "created",
+            "card": { "id": "...", "identifier": "...", "title": "...", "type": "...", "url": "...", "state": "...", "state_type": "...", "priority": "..." }
+          }
+        ]
+      },
+      "errors": []
     }
-  ],
-  "errors": []
+  }
 }
 ```
 
-- 跳过需求关联时 `product_id`/`idea`/`epic` 为 `null`
-- spec-only(story_artifact 为空):`stories` 为 `[]`,章节全文并入 spec 卡
-- spec-story:每个章节一个 `stories` 条目;spec 卡描述仅非 US 正文
-- 任务与 Phase 不是工作项,不入映射文件;sync-status 直接从 `tasks.md` 解析任务归属
+- `status`:`created` 或 `failed`(原因记入 `errors[]`,`card` 为 `null`);无条目 = 制品未生成
+- 跳过需求关联 → `idea` 为 `null`;无中间层或跳过 → `ancestors` 为 `{}`
+- 单卡模式 `stories` 为 `[]`,章节全文并入 spec 卡
+- 任务与 Phase 不是工作项,不入登记;sync-status 直接从 `tasks.md` 解析任务归属,收尾后回写各卡 `state`/`state_type`
 
 ### 12. 输出总结
 
@@ -331,13 +330,13 @@ story_artifact 为空 → 跳过本步,章节全文已随 spec 卡描述折叠�
 ═══════════════════════════════════════════
 项目: <项目名>    迭代: <迭代名/未挂>
 需求: <idea identifier> - <标题>(关联时)
-Epic: <identifier> - <同名标题>(复用/新建)
+史诗: <identifier> - <标题>(spec=特性 等有中间层时)
 Spec 卡: <identifier> - <标题>(spec_artifact 非空时)
   <url>
 Story 卡: <n> 张(spec-story 模式)
   • US1 <identifier> - <标题>
   • US2 <identifier> - <标题>
-映射: specs/<name>/pingcode-mapping.json
+登记: specs/pingcode-mapping.json(<spec-name> 条目)
 
 后续:
   • /speckit.tasks 生成本地任务清单;完成后勾选并运行 /speckit.pingcode.sync-status 收尾卡片
@@ -353,8 +352,9 @@ Story 卡: <n> 张(spec-story 模式)
 | workspace context 报错 | 运行 `pingcode context set-current-project "<项目名>"` |
 | 仓库子目录里执行命令后上下文丢失 | CLI 已将相对缓存路径锚定到 git 仓库根(metaphor/pingcode-cli bd4977f 起);旧版 CLI 需在仓库根执行,或将 `PINGCODE_WORKSPACE_CACHE` 设为绝对路径 |
 | 类型名匹配失败 | 运行 `/speckit.pingcode.discover-context` 查看实际类型名 |
+| 层级校验失败(story ≠ spec 下一层) | 映射跳级:运行 `/speckit.pingcode.init` 重选映射类型,保证 spec/story 相邻 |
 | 需求列表为空 | 核对 `--product`/config `product`;产品下确无需求时先在 PingCode 创建需求 |
-| 同名 Epic 撞名 | Epic 复用按标题精确匹配;命中了非本需求的同名工作项时,可先在 PingCode 区分标题后重跑 |
+| 史诗(中间层)列表为空 | 先在 PingCode 创建史诗后重跑,或选择跳过关联(spec 卡上浮为顶层) |
 | 状态名不识别 | 用缓存字典里的真实状态名;或按 `state_type` 兜底 |
 | HTTP 429 | 等待 `x-pc-retry-after` 秒后重试 |
 | 项目下无进行中迭代 | 询问用户指定迭代或不挂迭代 |

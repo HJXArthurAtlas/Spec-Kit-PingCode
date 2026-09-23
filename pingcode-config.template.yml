@@ -18,18 +18,25 @@ product: ""
 sprint: ""
 
 # 制品 → 工作项映射
-# 只有两级会建工作项:spec 整体、spec 的 User Story 章节。
+# 只有两级会建工作项:spec 整体、spec 的 User Story 章节;两个映射必须落在需求树相邻层级
+# (史诗=1/特性=2/用户故事=3,不跳级)。spec 卡上方的未映射祖先层在建卡时向用户确认
+# (需求必问,中间工作项层只选已有);下方的层永不询问。
 # Phase 与任务不建工作项,也不折叠进卡描述;任务进度只看本地 tasks.md(sync-status 收尾)。
 # 类型名以项目实际配置为准,可用 /speckit.pingcode.discover-context 查询
 mapping:
-  # SPEC.md 整体映射的工作项类型,默认 "特性"(spec = 特性卡,挂同名 Epic 下)
-  # 留空 "" = spec 不建卡(此时必须配置 story_artifact,章节卡挂 spec 位置)
+  # SPEC.md 整体映射的工作项类型,默认 "特性"(需求树第 2 层,挂所选史诗下)
+  # 留空 "" = spec 不建卡(此时必须配置 story_artifact)
   spec_artifact: "特性"
 
-  # spec.md 的 `### User Story N` 章节映射的工作项类型,默认 "用户故事"
-  # 留空 "" = 章节不建卡,全文并入 spec 卡描述
-  # 设为类型名 = 每个章节建一张卡,挂 spec 卡下
+  # spec.md 的 `### User Story N` 章节映射的工作项类型,默认 "用户故事"(第 3 层,挂 spec 卡下)
+  # 必须为 spec 的紧邻下一层;留空 "" = 章节不建卡,全文并入 spec 卡描述
   story_artifact: "用户故事"
+
+  # 类型层级归类(可选):仅当项目类型名不含规范词(史诗/特性/用户故事)时由 init 询问后写入
+  # 层级:1=史诗层 2=特性层 3=用户故事层
+  # type_levels:
+  #   模块: 2
+  #   条目: 3
 
 # 章节 P1/P2/P3 → 项目优先级名(创建章节卡时使用)
 # 从章节标题尾注捕获 P 编号(如 "(Priority: P1)"、"(P1)"),按此映射设置 --priority

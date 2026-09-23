@@ -5,6 +5,30 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.4.0] - 2026-09-23
+
+### Changed
+
+- **BREAKING**:映射层级动态化——`spec_artifact`/`story_artifact` 决定制品栈在需求树
+  (需求 → 史诗 → 特性 → 用户故事 → 任务)的位置,必须相邻不跳级(init 归类校验,
+  非规范类型名询问后写入 `mapping.type_levels`);spec 卡上方未映射祖先层自顶向下确认:
+  需求(idea)必问,中间工作项层(如史诗)**只从已有项中选择,不再自动创建同名 Epic**;
+  spec 下方的层永不询问;新增 `--epic` 参数跳过史诗层交互
+- **BREAKING**:映射登记从 `specs/<name>/pingcode-mapping.json` 收敛为统一文件
+  `specs/pingcode-mapping.json`,记录所有 spec 的制品生成状态(status: created/failed)、
+  卡片 id 与卡片状态;旧文件由 specstoissues 自动迁移后删除
+- `init` 第 7 步改造为「选择迭代并初始化 CLI 运行时上下文」:上下文初始化/校验**总是执行**,
+  已有三项偏好时不再静默跳过——校验 用户/迭代 偏好与四类字典(类型/状态/优先级/sprints)的
+  新鲜度与完整性,按需修复;迭代留空时强制校验 `current_sprint_id` 残留状态;
+  输出摘要新增上下文终态行
+
+### Fixed
+
+- `specstoissues` 迭代解析链第 3 级(context 当前迭代)增加状态校验:仅 `in_progress` 时采用,
+  context 残留的已结束迭代不再隐式生效,继续走动态发现
+- `init` 迭代留空时检查 context 已残留的 `current_sprint_id`,非进行中则提醒更新,
+  避免陈旧迭代在解析链中优先于动态解析
+
 ## [2.3.0] - 2026-09-22
 
 ### Changed
