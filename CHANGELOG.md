@@ -5,6 +5,14 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.7.0] - 2026-09-23
+
+### Added
+
+- 新命令 `/speckit.pingcode.sync-cards` + `before_implement` hook:实现开始前核对 spec 制品
+  与 PingCode 卡片的一致性,按差异增删改——制品已不存在则删卡(逐项用户确认)、内容变更则
+  字段级更新、新增制品则补建并挂既有祖先链;祖先关联不重新询问,统一登记回写
+
 ## [2.6.1] - 2026-09-23
 
 ### Changed

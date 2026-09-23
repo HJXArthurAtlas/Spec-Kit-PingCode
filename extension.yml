@@ -4,7 +4,7 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.6.1"
+  version: "2.7.0"
   description: "Create PingCode requirement tree (idea → epic → feature + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
@@ -38,6 +38,10 @@ provides:
       file: "commands/sync-status.md"
       description: "Auto-close PingCode cards when their local tasks are all checked"
 
+    - name: "speckit.pingcode.sync-cards"
+      file: "commands/sync-cards.md"
+      description: "Reconcile spec artifacts with PingCode cards (add/update/remove) before implementation"
+
   config:
     - name: "pingcode-config.yml"
       template: "pingcode-config.template.yml"
@@ -62,6 +66,12 @@ hooks:
     condition: "config.mapping.task_artifact is set"
     prompt: "根据 tasks.md 补建任务卡?"
     description: "task_artifact 已配置时,在 /speckit.tasks 生成后补建任务卡(幂等,已存在的卡片不重建)"
+  before_implement:
+    command: "speckit.pingcode.sync-cards"
+    optional: true
+    priority: 99
+    prompt: "核对 spec 制品与 PingCode 卡片一致性?"
+    description: "在 /speckit.implement 之前核对建卡后制品的后续修改,按差异增删改卡片"
 
 tags:
   - "issue-tracking"
