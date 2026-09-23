@@ -4,7 +4,10 @@ description: "本地任务全部勾选后,将对应的 PingCode 卡片流转到�
 
 # 同步任务完成状态到 PingCode
 
-任务本身不是工作项,也不进卡描述;本命令只做**卡片收尾**:读取本地 `tasks.md` 的勾选进度,某张卡关联的任务全部 `- [x]` 时,把该卡流转到完成态。
+任务本身默认不是工作项(仅本地 checklist);配置 `mapping.task_artifact` 后每个任务行有一张任务卡。本命令做两件事,均受 `sync.complete_story_when_tasks_done` 开关控制:
+
+1. **任务卡流转**(前置:`mapping.task_artifact` 已配置;未配置时本项整体跳过,任务仅是本地 checklist):本地任务行 `- [x]` 且登记中对应任务卡未完成 → 把该任务卡流转到 `status_mapping.completed`
+2. **卡片收尾**:某张 story/spec 卡关联的任务全部 `- [x]` → 把该卡流转到完成态(方向:本地 → PingCode,单向、只收尾、不回退)
 
 **方向:本地 → PingCode,单向、只收尾。** 不做中间状态流转,不回退远端状态,不改本地文件;远端已推进的卡不动。
 
@@ -70,9 +73,17 @@ pingcode workitem get <identifier> --compact
 
 已是 completed 的卡跳过。
 
-### 5. 收尾计划
+### 5. 流转计划
 
-某卡关联任务全部 completed 且 `sync.complete_story_when_tasks_done: true` → 计划流转该卡:
+**任务卡**(配置 `task_artifact` 时):登记 `artifacts.tasks[]` 中每个 `task_id`,在本地 `tasks.md` 中勾选为 `- [x]` 且其卡片 `state_type` 非 completed → 计划流转:
+
+```bash
+pingcode workitem update <task 卡 identifier> --state "<status_mapping.completed>"
+```
+
+本地未勾选而远端任务卡已完成 → 不回退,仅输出差异。
+
+**story/spec 卡收尾**:某卡关联任务全部 completed 且 `sync.complete_story_when_tasks_done: true` → 计划流转该卡:
 
 ```bash
 pingcode workitem update <identifier> --state "<status_mapping.completed>"

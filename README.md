@@ -1,14 +1,15 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.4.1-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.5.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
 
 ## 功能
 
-- **两级映射**:仅 SPEC.md 整体与 `### User Story N` 章节建卡(`spec_artifact`/`story_artifact`);Phase 与任务永不建工作项,也不进卡描述
+- **最多三级映射**:SPEC.md 整体、`### User Story N` 章节、任务行(`task_artifact`,可选)建工作项卡;Phase 永不建卡、不进卡描述
+- **任务卡**:`task_artifact` 配置后每个任务行建卡挂所属 story/spec 卡下,由 `after_tasks` hook 在 `/speckit.tasks` 后补建;本地勾选后由 sync-status 按配置流转
 - **单卡模式**:只配 `spec_artifact`,整个 spec(含章节)折叠进一张卡
 - **按章节模式(默认)**:`story_artifact` 配置后每个章节一张卡、内容各自携带,spec 卡只保留非章节正文
 - **章节优先级**:章节尾注 `P1/P2/P3` 经 `priority_mapping` 映射为项目优先级
@@ -33,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.4.1/pingcode-2.4.1.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.5.0/pingcode-2.5.0.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -67,10 +68,10 @@ specify extension add --dev /path/to/spec-kit-pingcode
 ## 层级映射
 
 ```text
-PingCode 需求树:  需求(idea,产品级) → 史诗(1) → 特性(2) → 用户故事(3) → 任务
-spec-kit 制品:    SPEC.md 整体 → User Story 章节 → 任务(checklist,不建卡)
+PingCode 需求树:  需求(idea,产品级) → 史诗(1) → 特性(2) → 用户故事(3) → 任务(4)
+spec-kit 制品:    SPEC.md 整体 → User Story 章节 → 任务行(task_artifact 可选建卡)
 
-spec_artifact + story_artifact 决定制品栈落在哪两层(必须相邻,不跳级):
+spec_artifact + story_artifact(+ task_artifact)决定制品栈落点(必须相邻,不跳级):
 
 特性 + 用户故事(默认):
 需求(询问) → 史诗(询问:只选已有) → 特性(spec 卡) → 用户故事(story 卡)
@@ -81,7 +82,8 @@ spec_artifact + story_artifact 决定制品栈落在哪两层(必须相邻,不�
 用户故事 + 留空(单卡):
 需求 → 史诗 → 特性(询问:只选已有) → 用户故事(spec 卡)
 
-## Phase N / - [ ] T001 任务行  →  永不建工作项,也不进卡描述
+## Phase N  →  永不建工作项,也不进卡描述
+## - [ ] T001 任务行  →  task_artifact 配置时建任务卡挂所属卡下;未配置时仅本地 checklist
 ```
 
 规则:设 spec 位于第 n 层,第 1..n-1 层未映射祖先自顶向下确认——需求(idea)必问,记录式关联(idea 是产品域实体,不作工作项父级,登记于统一映射文件并在卡描述注记);中间工作项层只从已有项中选择,不代建;第 n 层以下永不询问。迭代挂在 spec/story 卡层级。
@@ -123,7 +125,7 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 ### `/speckit.pingcode.sync-status`
 
-本地任务全部勾选后,自动将所属卡流转到完成态(spec-story 模式逐 story 卡判断,spec-only 模式判断 spec 卡),写日志 `pingcode-sync-log.json`。
+本地任务勾选后同步状态到 PingCode(均受 `sync.complete_story_when_tasks_done` 控制):配置 `task_artifact` 时逐任务卡流转 `- [x]` 的任务;story/spec 卡在关联任务全部勾选后收尾。写日志 `pingcode-sync-log.json`。
 
 ```bash
 /speckit.pingcode.sync-status              # 自动检测
@@ -144,6 +146,7 @@ sprint: ""                    # 可选,留空走运行时解析链
 mapping:
   spec_artifact: "特性"        # SPEC.md 整体的映射类型(需求树第 2 层,挂所选史诗下)
   story_artifact: "用户故事"   # 必须为 spec 的紧邻下一层;空=章节并入 spec 卡描述
+  task_artifact: ""            # 空=任务仅本地 checklist;设 "任务" 等类型名=任务行建卡
 
 priority_mapping:
   p1: "高"                     # 章节 P1/P2/P3 → 优先级名

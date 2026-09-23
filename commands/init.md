@@ -67,15 +67,19 @@ pingcode product list --compact
 
 - `spec_artifact`:推荐 `group=requirement` 中名称含「特性/feature」的类型
 - `story_artifact`:推荐「用户故事/story」类;用户可选择"不按章节建卡"(写空字符串)
+- `task_artifact`:可选,推荐 `group=task` 中「任务/task」类;留空 = 任务不建卡(仅本地 checklist)。
+  配置后任务行建任务卡挂所属 story/spec 卡下,勾选流转受 `sync.complete_story_when_tasks_done` 控制
 - 两者皆空 → 提示至少配置一项,回到本步重选
 
-**需求树层级归类**(specstoissues 据此确定要确认的祖先层,层级:史诗=1/特性=2/用户故事=3):
+**需求树层级归类**(specstoissues 据此确定要确认的祖先层,层级:史诗=1/特性=2/用户故事=3/任务=4):
 
-- 规范名(含「史诗/epic」「特性/feature」「用户故事/story」)自动归类
+- 规范名(含「史诗/epic」「特性/feature」「用户故事/story」「任务/task」)自动归类
 - 非规范名 → 询问用户该类型归属第几层,并把 `<类型名>: <层>` 写入配置 `mapping.type_levels`(运行时识别用)
-- spec/story 必须落在相邻层级(不跳级):`story_artifact` 非空时其层级必须 = spec 层级 + 1,
+- 各映射必须落在相邻层级(不跳级):`story_artifact` 非空时其层级必须 = spec 层级 + 1;
+  `task_artifact` 非空时其层级必须 = story(或 spec,story 留空时)层级 + 1;
   违例(如 spec=史诗 + story=用户故事,中间跳过特性)→ 说明父子链会断裂,回到本步重选
-- spec=用户故事(第 3 层)时无下一层可用 → `story_artifact` 必须留空(单卡模式)
+- spec=用户故事(第 3 层)时无 requirement 下一层可用 → `story_artifact` 必须留空
+  (`task_artifact` 仍可配第 4 层类型)
 
 ### 5. 选择收尾状态名
 
@@ -138,6 +142,7 @@ sprint: "<选定迭代 或 空>"
 mapping:
   spec_artifact: "<选定>"
   story_artifact: "<选定 或 空>"
+  task_artifact: "<选定 或 空>"
   # 仅当存在非规范名类型时由 init 写入层级归类,如:
   # type_levels:
   #   模块: 2

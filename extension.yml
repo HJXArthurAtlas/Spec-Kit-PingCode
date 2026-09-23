@@ -4,7 +4,7 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.4.1"
+  version: "2.5.0"
   description: "Create PingCode requirement tree (idea → epic → feature + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
@@ -53,6 +53,12 @@ hooks:
     priority: 99
     prompt: "选择关联需求并创建 PingCode 卡片?"
     description: "在 /speckit.plan 完成后可选创建 PingCode 需求树卡片(动态祖先关联)"
+  after_tasks:
+    command: "speckit.pingcode.specstoissues"
+    optional: true
+    priority: 99
+    prompt: "根据 tasks.md 补建任务卡?"
+    description: "task_artifact 已配置时,在 /speckit.tasks 生成后补建任务卡(幂等,已存在的卡片不重建)"
 
 tags:
   - "issue-tracking"

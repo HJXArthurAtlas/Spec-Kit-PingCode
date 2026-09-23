@@ -5,7 +5,16 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-## [2.4.1] - 2026-09-23
+## [2.5.0] - 2026-09-23
+
+### Added
+
+- `mapping.task_artifact` 回归:任务行可映射为工作项卡(推荐 `任务` 类型,需求树第 4 层)——
+  每个任务行建一张任务卡挂所属 story/spec 卡下;`after_plan` 触发时 tasks.md 尚未生成,
+  任务卡由新增的 `after_tasks` hook 或手动重跑补建(幂等);环境变量
+  `SPECKIT_PINGCODE_TASK_ARTIFACT`;统一登记新增 `artifacts.tasks[]`
+- 任务卡状态同步:本地勾选 `- [x]` 后由 `sync-status` 将对应任务卡流转到完成态,
+  受 `sync.complete_story_when_tasks_done` 开关控制;story/spec 卡收尾逻辑不变
 
 ### Fixed
 

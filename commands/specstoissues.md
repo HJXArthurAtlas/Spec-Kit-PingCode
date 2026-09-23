@@ -6,9 +6,9 @@ description: "将 spec-kit 的 spec 转换为 PingCode 需求树卡片(层级映
 
 本命令把 spec-kit 产物转换为 PingCode 需求树卡片(通过 `pingcode` CLI,不依赖 MCP):
 
-- **两级建卡**:SPEC.md 整体(`mapping.spec_artifact`)与 `### User Story N` 章节(`mapping.story_artifact`)映射为工作项卡;两个映射必须落在需求树**相邻层级**(不跳级),任务与 Phase 永不建卡
-- **动态祖先关联**:设 spec 卡位于需求树第 n 层(史诗=1/特性=2/用户故事=3),第 1..n-1 层为未映射祖先——需求(idea)必问;中间工作项层**只从已有项中选择**,不代建;第 n 层以下永不询问、永不建卡
-- **任务不进卡片**:Phase 与任务永不建工作项,也不折叠进卡描述;任务进度只存在于本地 `tasks.md`,由 `/speckit.pingcode.sync-status` 据此收尾
+- **最多三级建卡**:SPEC.md 整体(`mapping.spec_artifact`)、`### User Story N` 章节(`mapping.story_artifact`)、任务行(`mapping.task_artifact`,可选)映射为工作项卡;各映射必须落在需求树**相邻层级**(不跳级),Phase 永不建卡
+- **动态祖先关联**:设 spec 卡位于需求树第 n 层(史诗=1/特性=2/用户故事=3),第 1..n-1 层为未映射祖先——需求(idea)必问;中间工作项层**只从已有项中选择**,不代建;第 n 层以下永不询问
+- **任务双形态**:`task_artifact` 为空(默认)时任务仅是本地 checklist,不建卡也不进卡描述;配置后每个任务行建一张任务卡挂所属 story/spec 卡下,`tasks.md` 未生成时(after_plan 触发的常态)由 `after_tasks` hook 或手动重跑补建,勾选状态由 `/speckit.pingcode.sync-status` 按 `sync` 配置流转
 - **统一映射登记**:所有 spec 的映射集中登记在 `specs/pingcode-mapping.json`(制品生成状态、卡片 id、卡片状态),不再按 spec 分散存文件
 
 所有操作通过 bash 执行 `pingcode` CLI 完成。**严格遵守:禁止猜测任何 ID;所有名称先解析为 ID 再执行写操作。**
@@ -94,6 +94,7 @@ printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 | `sprint` | `SPECKIT_PINGCODE_SPRINT` | `""` |
 | `mapping.spec_artifact` | `SPECKIT_PINGCODE_SPEC_ARTIFACT` | `特性` |
 | `mapping.story_artifact` | `SPECKIT_PINGCODE_STORY_ARTIFACT` | `用户故事` |
+| `mapping.task_artifact` | `SPECKIT_PINGCODE_TASK_ARTIFACT` | `""` |
 | `mapping.type_levels` | 无 | 内置规范表(见第 5 步) |
 | `status_mapping.completed` | `SPECKIT_PINGCODE_STATUS_COMPLETED` | `已完成` |
 | `priority_mapping.p1/p2/p3` | `SPECKIT_PINGCODE_PRIORITY_{P1,P2,P3}` | 高/中/低 |
@@ -104,10 +105,13 @@ printf '<项目编号>\n<迭代编号>\n<用户ID>\n' | pingcode context init
 spec 层级 n   = mapping.spec_artifact 在需求树中的层级(第 5 步解析)
 story 卡  = story_artifact 非空:每个 `### User Story N` 章节建一张卡,挂 spec 卡下;
             其层级必须为 n+1,否则终止(不跳级)
+task 卡   = task_artifact 非空且 tasks.md 存在:每个任务行建一张卡,挂所属 story/spec 卡下;
+            层级必须为 n+2(story 留空时 n+1);tasks.md 不存在则本轮跳过,
+            由 after_tasks hook 或手动重跑补建
 spec 卡   = spec_artifact 非空:整个 spec 建一张卡
 两者皆空  = 终止:没有任何映射目标
 祖先层    = 第 1..n-1 层未被制品映射的层,第 8 步逐层确认;第 n 层以下永不询问
-任务与 Phase = 永不建卡,进度只看本地 tasks.md
+Phase     = 永不建卡
 ```
 
 ### 4. 解析项目与迭代
@@ -128,11 +132,12 @@ spec 卡   = spec_artifact 非空:整个 spec 建一张卡
 
 ### 5. 解析类型与需求树层级
 
-**层级表**:规范名内置 `史诗=1 / 特性=2 / 用户故事=3`;配置 `mapping.type_levels`(init 对非规范类型名的归类结果)优先覆盖。spec 与 story 的层级:
+**层级表**:规范名内置 `史诗=1 / 特性=2 / 用户故事=3 / 任务=4`;配置 `mapping.type_levels`(init 对非规范类型名的归类结果)优先覆盖。spec 与 story 的层级:
 
 - `mapping.spec_artifact` → spec_type_id,层级 n
 - `mapping.story_artifact` → story_type_id(非空时),层级必须 = n+1
-- **不跳级校验**:story 层级 ≠ n+1 → 终止,引导 `/speckit.pingcode.init` 修正映射;spec=用户故事(第 3 层)时无下一层可用,story_artifact 必须为空(单卡模式)
+- `mapping.task_artifact` → task_type_id(非空时),层级必须 = n+2(story 留空时 n+1)
+- **不跳级校验**:相邻层级不符 → 终止,引导 `/speckit.pingcode.init` 修正映射;spec=用户故事(第 3 层)时无下一层可用,story_artifact 必须为空(单卡模式,task_artifact 此时最多为第 4 层类型)
 
 任一类型名匹配失败 → 终止,引导运行 `/speckit.pingcode.discover-context` 查看该项目实际类型名,修正配置后重试。**禁止用不存在的类型名调用创建接口。**
 
@@ -160,7 +165,7 @@ spec 卡(spec_artifact 非空时):
 
 - 旧版 `specs/<name>/pingcode-mapping.json` 存在且统一文件无此条目 → **自动迁移**(spec_card→artifacts.spec、stories[]→artifacts.stories、epic→ancestors.史诗),写回统一文件后删除旧文件并回显
 - 条目已存在:展示登记摘要(需求/祖先/各卡 identifier 与状态),询问用户:
-  1. **补建**——跳过已有 identifier 的制品,只创建缺失的;条目已含 `idea`/`ancestors` 时沿用,不重选需求、不重选祖先
+  1. **补建**——跳过已有 identifier 的制品,只创建缺失的(含 tasks.md 已生成但 `artifacts.tasks[]` 缺失的任务卡);条目已含 `idea`/`ancestors` 时沿用,不重选需求、不重选祖先
   2. **重建**——忽略旧登记全部重建(会在 PingCode 产生重复,需用户明确确认)
   3. **中止**——退出,让用户人工处理
 
@@ -260,7 +265,33 @@ US: US<N> - <章节标题>
 
 story_artifact 为空 → 跳过本步,章节全文已随 spec 卡描述折叠。
 
-### 11. 写统一映射登记文件
+### 11. 创建任务卡(task_artifact 非空且 tasks.md 存在时)
+
+`task_artifact` 为空 → 跳过本步;`tasks.md` 不存在(after_plan 触发的常态)→ 跳过本步并在输出中注明"任务卡将在 /speckit.tasks 生成后由 after_tasks hook 或手动重跑补建"。
+
+解析 `specs/<name>/tasks.md`:
+
+- Phase:`## ` 标题;任务行:`- [x]/[~]/[ ] T001 描述`(保留原始标记;编号 `T\d+` 提取,无编号行按标题文本去重)
+- 归属:优先任务行 `[US\d+]` 标记,其次 Phase 标题含 `User Story <N>`,都没有 → spec 级(sync-status 复用同一归属规则)
+
+对每个任务行,挂到归属链上最深的一张**已存在**卡(story 卡 → spec 卡 → 最深祖先):
+
+```bash
+pingcode workitem create \
+  --title "T001 - <描述>" \
+  --type <task_type_id> \
+  --project <project_id> \
+  --sprint <sprint_id> \
+  --parent <归属卡 id> \
+  --description "> 来源: specs/<name>/tasks.md T001
+归属: US1 - <章节标题>"
+```
+
+- 幂等:统一登记 `artifacts.tasks[]` 中已有同 `task_id` 且 `status: created` 的跳过
+- 优先级/负责人不显式设置;创建时不流转状态(本地勾选状态由 sync-status 按 `sync` 配置处理)
+- 登记条目:`{"task_id": "T001", "title": "T001 - <描述>", "status": "created", "card": {...}}`
+
+### 12. 写统一映射登记文件
 
 写 `specs/pingcode-mapping.json`(文件已存在时仅更新本 spec 条目,其他条目原样保留):
 
@@ -309,6 +340,14 @@ story_artifact 为空 → 跳过本步,章节全文已随 spec 卡描述折叠�
             "status": "created",
             "card": { "id": "...", "identifier": "...", "title": "...", "type": "...", "url": "...", "state": "...", "state_type": "...", "priority": "..." }
           }
+        ],
+        "tasks": [
+          {
+            "task_id": "T001",
+            "title": "T001 - <描述>",
+            "status": "created",
+            "card": { "id": "...", "identifier": "...", "title": "...", "type": "任务", "url": "...", "state": "...", "state_type": "...", "priority": null }
+          }
         ]
       },
       "errors": []
@@ -319,10 +358,10 @@ story_artifact 为空 → 跳过本步,章节全文已随 spec 卡描述折叠�
 
 - `status`:`created` 或 `failed`(原因记入 `errors[]`,`card` 为 `null`);无条目 = 制品未生成
 - 跳过需求关联 → `idea` 为 `null`;无中间层或跳过 → `ancestors` 为 `{}`
-- 单卡模式 `stories` 为 `[]`,章节全文并入 spec 卡
-- 任务与 Phase 不是工作项,不入登记;sync-status 直接从 `tasks.md` 解析任务归属,收尾后回写各卡 `state`/`state_type`
+- 单卡模式 `stories` 为 `[]`,章节全文并入 spec 卡;`task_artifact` 未配置或 tasks.md 未生成时 `tasks` 为 `[]`
+- `tasks[]` 以 `task_id` 为键;sync-status 从 `tasks.md` 解析勾选与归属,流转任务卡并回写各卡 `state`/`state_type`
 
-### 12. 输出总结
+### 13. 输出总结
 
 ```
 ═══════════════════════════════════════════
@@ -336,6 +375,7 @@ Spec 卡: <identifier> - <标题>(spec_artifact 非空时)
 Story 卡: <n> 张(spec-story 模式)
   • US1 <identifier> - <标题>
   • US2 <identifier> - <标题>
+任务卡: <n> 张(task_artifact 配置且 tasks.md 已生成时)
 登记: specs/pingcode-mapping.json(<spec-name> 条目)
 
 后续:
@@ -355,6 +395,7 @@ Story 卡: <n> 张(spec-story 模式)
 | 层级校验失败(story ≠ spec 下一层) | 映射跳级:运行 `/speckit.pingcode.init` 重选映射类型,保证 spec/story 相邻 |
 | 需求列表为空 | 核对 `--product`/config `product`;产品下确无需求时先在 PingCode 创建需求 |
 | 史诗(中间层)列表为空 | 先在 PingCode 创建史诗后重跑,或选择跳过关联(spec 卡上浮为顶层) |
+| 任务卡没建 | after_plan 触发时 tasks.md 尚未生成:运行 /speckit.tasks 后由 after_tasks hook 补建,或手动重跑本命令 |
 | 状态名不识别 | 用缓存字典里的真实状态名;或按 `state_type` 兜底 |
 | HTTP 429 | 等待 `x-pc-retry-after` 秒后重试 |
 | 项目下无进行中迭代 | 询问用户指定迭代或不挂迭代 |
