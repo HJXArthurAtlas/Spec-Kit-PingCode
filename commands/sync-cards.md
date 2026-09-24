@@ -18,16 +18,33 @@ description: "实现前核对 spec 制品与 PingCode 卡片的一致性,按差�
 
 $ARGUMENTS
 
-- `--spec <name>`:指定 spec;缺省时自动检测(规则同 specstoissues)
+- **第一个位置参数** = spec 名称,如 `002-payment-callback`(等价于 `--spec`)
+- `--spec <name>`:指定要同步的 spec——可以是非当前分支的任意其他 spec,只要统一登记里有它的条目
 - `--dry-run`:只输出差异计划,不执行任何写操作(**建议每次先跑**)
+
+```bash
+/speckit.pingcode.sync-cards                            # 自动检测当前 spec
+/speckit.pingcode.sync-cards 002-payment-callback       # 同步指定的其他 spec
+/speckit.pingcode.sync-cards --spec 002-payment-callback --dry-run
+```
+
+本命令也可由 hook 在任意事件触发(before_implement 之外的挂法见 README「Hook 与手动触发」),
+触发时的交互与手动调用完全一致。
 
 ## 步骤
 
-### 1. 加载上下文
+### 1. 定位 spec 并加载上下文
 
-- 读取统一登记 `specs/pingcode-mapping.json` 中该 spec 的条目(`mode`、`idea`、`ancestors`、`artifacts`)
-- 读取配置 `pingcode-config.yml`(映射/状态/优先级)
-- 环境自检:`pingcode auth status`;`context list` 偏好缺失时按 specstoissues 第 2 步补齐
+按优先级确定要同步的 spec:
+
+1. 位置参数(第一个非 `--` 参数)或 `--spec` 指定的名称
+2. git 分支名匹配 `specs/<分支名>/` 且统一登记含该条目
+3. 当前目录位于 `specs/<name>/` 内
+4. 都无法唯一定位 → 按候选展示规范表格列出统一登记中的**全部 spec 条目**(列:`#`/spec 名/模式/各层卡数),让用户选择
+
+随后读取该条目(`mode`、`idea`、`ancestors`、`artifacts`)、配置 `pingcode-config.yml`(映射/状态/优先级),环境自检:`pingcode auth status`;`context list` 偏好缺失时按 specstoissues 第 2 步补齐。
+
+**同步非当前分支的 spec 时**,spec.md/tasks.md 按该 spec 目录路径读取,不做分支切换;制品以磁盘上的现行内容为准。
 
 ### 2. 解析当前制品(期望状态)
 

@@ -5,6 +5,15 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.7.1] - 2026-09-24
+
+### Added
+
+- `sync-cards` 支持命令后直接跟 spec 名称(位置参数,等价 `--spec`),可同步统一登记中的
+  任意其他 spec,不限当前分支;无法唯一定位时表格列出登记中的全部 spec 供选择
+- README 新增「Hook 与手动触发」:默认挂 `before_implement`,可在项目 `extensions.yml`
+  中把 hook 条目移动/复制到其他事件或 `enabled: false` 后随时手动调用
+
 ## [2.7.0] - 2026-09-23
 
 ### Added

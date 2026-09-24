@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.7.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.7.1-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -34,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.7.0/pingcode-2.7.0.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.7.1/pingcode-2.7.1.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -121,12 +121,31 @@ spec 自动检测优先级:`--spec` 参数 > git 分支名 > 当前目录 > 唯�
 
 ### `/speckit.pingcode.sync-cards`
 
-实现开始前核对 spec 制品与 PingCode 卡片的一致性(before_implement hook 触发,也可手动):制品已不存在 → 删卡(逐项确认);标题/描述变更 → 字段级更新;新增制品 → 补建并挂既有祖先链。祖先关联不重新询问。
+实现开始前核对 spec 制品与 PingCode 卡片的一致性(before_implement hook 触发,也可随时手动调用):制品已不存在 → 删卡(逐项确认);标题/描述变更 → 字段级更新;新增制品 → 补建并挂既有祖先链。祖先关联不重新询问。命令后可直接跟 spec 名称,同步任意其他 spec(不限当前分支)。
 
 ```bash
-/speckit.pingcode.sync-cards --spec 001-user-auth   # 核对并输出差异计划
-/speckit.pingcode.sync-cards --dry-run              # 只看计划不执行
+/speckit.pingcode.sync-cards                            # 自动检测当前 spec
+/speckit.pingcode.sync-cards 002-payment-callback       # 同步指定的其他 spec
+/speckit.pingcode.sync-cards --spec 001-user-auth       # 等价写法
+/speckit.pingcode.sync-cards --dry-run                  # 只看差异计划不执行
 ```
+
+#### Hook 与手动触发
+
+默认挂载在 `before_implement`(实现前自动核对)。它只是项目 `.specify/extensions.yml` 里的一条普通 hook 配置,可按需调整:
+
+```yaml
+before_implement:
+- extension: pingcode
+  command: speckit.pingcode.sync-cards
+  enabled: true          # 改 false 即关闭自动触发,随时手动调用
+  optional: true
+  priority: 99
+```
+
+- **换时机**:把整段条目剪切到其他事件下(如 `after_tasks`、`after_plan`、`before_specify`),hook 语义与手动调用完全一致
+- **多时机**:同一条目可复制到多个事件下同时挂载
+- **手动**:任何时刻直接调用 `/speckit.pingcode.sync-cards [spec名]`;安装时命令会同时注册为 skill `speckit-pingcode-sync-cards`
 
 ### `/speckit.pingcode.discover-context`
 
