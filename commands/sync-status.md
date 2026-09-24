@@ -89,6 +89,11 @@ pingcode workitem update <task 卡 identifier> --state "<status_mapping.complete
 pingcode workitem update <identifier> --state "<status_mapping.completed>"
 ```
 
+**开关关闭时仍维护登记状态**:`sync.complete_story_when_tasks_done: false` → 不产生任何
+PingCode 写计划,但本地判定为完成(关联任务全部 `- [x]`)的卡,统一登记中的 `card.state`
+更新为 `status_mapping.completed` 名(`state_type: completed`)、`state_synced` 置 `false`
+——状态在 JSON 里保持正确,只是尚未推送到 PingCode,待开关开启后由 sync-status 补推。
+
 未全部完成 → 不动该卡,输出进度。远端已 completed 而本地未全勾 → 不回退,输出提示。
 
 `--dry-run`:输出完整计划后结束,不执行更新。
@@ -117,7 +122,9 @@ pingcode workitem update <identifier> --state "<status_mapping.completed>"
 }
 ```
 
-同时回写统一登记 `specs/pingcode-mapping.json` 中该 spec 条目里各卡的 `state`/`state_type` 与条目 `updated_at`。
+同时回写统一登记 `specs/pingcode-mapping.json` 中该 spec 条目里各卡的 `state`/`state_type`、
+`state_synced`(流转成功 `true`;开关关闭时本地判定完成 `false`)、`pushed_at`(实际发生
+PingCode 写入时刷新)与条目 `updated_at`。
 
 ### 8. 输出总结
 

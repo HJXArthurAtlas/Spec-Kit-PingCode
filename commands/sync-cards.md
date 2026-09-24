@@ -90,7 +90,8 @@ pingcode workitem get <identifier> --compact
 
 - 更新统一登记 `specs/pingcode-mapping.json` 该 spec 条目:
   - 删除成功的制品从 `artifacts` 移除
-  - 新建成功的写入对应 `artifacts` 条目(`status: created` + 卡信息)
+  - 新建/更新成功的制品:`pushed_at` 刷新为当前时间、`state_synced` 置 `true`
+    (内容与状态均以远端为准),`card` 信息刷新
   - 全部卡的 `state`/`state_type` 刷新;`updated_at` 更新
 - 输出总结:
 

@@ -5,6 +5,16 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.9.0] - 2026-09-24
+
+### Added
+
+- 统一登记每个制品新增 `pushed_at`(最后一次成功推送到 PingCode 的时间,创建/内容更新/
+  状态流转均刷新)与 `state_synced` 标记(`card.state` 是否已同步到 PingCode)
+- `sync.complete_story_when_tasks_done: false` 时,本地判定完成的卡不再完全跳过——
+  登记中的 `card.state` 仍更新为完成态并标记 `state_synced: false`,保持 JSON 状态正确;
+  开关重新开启后由 sync-status 补推并翻回 `true`
+
 ## [2.8.1] - 2026-09-24
 
 ### Removed

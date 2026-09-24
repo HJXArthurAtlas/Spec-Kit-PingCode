@@ -1,7 +1,7 @@
 # Spec Kit - PingCode Integration Extension
 
 [![Spec Kit](https://img.shields.io/badge/spec--kit-extension-blue?logo=github)](https://github.com/github/spec-kit)
-[![Version](https://img.shields.io/badge/version-2.8.1-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
+[![Version](https://img.shields.io/badge/version-2.9.0-green)](https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 将 spec-kit 的规格产物映射为 PingCode 需求树——只有 SPEC.md 整体与 `### User Story N` 章节两级建卡,映射层级可配置(相邻不跳级);建卡时自顶向下确认 spec 上方的未映射祖先层(需求必问,中间工作项层只选已有);本地任务全部勾选后自动收尾卡片。基于 [PingCode CLI](https://github.com/metaphor/pingcode-cli) 命令行工具,扩展本身零代码。
@@ -34,7 +34,7 @@
 ```bash
 # 在 spec-kit 项目内,从 Release 归档安装
 specify extension add pingcode \
-  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.8.1/pingcode-2.8.1.zip
+  --from https://github.com/HJXArthurAtlas/Spec-Kit-PingCode/releases/download/v2.9.0/pingcode-2.9.0.zip
 
 # 或本地开发安装
 specify extension add --dev /path/to/spec-kit-pingcode
@@ -212,7 +212,7 @@ sync:
 
 | 文件 | 作用 |
 |---|---|
-| `specs/pingcode-mapping.json` | 统一映射登记:所有 spec 的制品生成状态、卡片 id 与卡片状态;specstoissues 写入、sync-status 消费/回写 |
+| `specs/pingcode-mapping.json` | 统一映射登记:所有 spec 的制品生成状态、卡片 id 与状态、最后推送时间(`pushed_at`)及同步标记(`state_synced`);specstoissues 写入、sync-cards/sync-status 消费/回写 |
 | `specs/<name>/pingcode-sync-log.json` | 每次同步的收尾记录与进度 |
 | `.specify/extensions/pingcode/discovered-context.json` | 项目字典探查结果 |
 

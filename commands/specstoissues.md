@@ -358,6 +358,8 @@ pingcode workitem create \
         "spec": {
           "title": "<标题>",
           "status": "created",
+          "pushed_at": "<ISO8601 最后一次成功推送(创建/内容更新/状态流转)到 PingCode 的时间>",
+          "state_synced": true,
           "card": {
             "id": "<id>",
             "identifier": "<identifier>",
@@ -374,6 +376,8 @@ pingcode workitem create \
             "us_no": "US1",
             "title": "US1 - <章节标题>",
             "status": "created",
+            "pushed_at": "<同上>",
+            "state_synced": true,
             "card": { "id": "...", "identifier": "...", "title": "...", "type": "...", "url": "...", "state": "...", "state_type": "...", "priority": "..." }
           }
         ],
@@ -382,6 +386,8 @@ pingcode workitem create \
             "task_id": "T001",
             "title": "T001 - <描述>",
             "status": "created",
+            "pushed_at": "<同上>",
+            "state_synced": true,
             "card": { "id": "...", "identifier": "...", "title": "...", "type": "任务", "url": "...", "state": "...", "state_type": "...", "priority": null }
           }
         ]
@@ -393,6 +399,9 @@ pingcode workitem create \
 ```
 
 - `status`:`created` 或 `failed`(原因记入 `errors[]`,`card` 为 `null`);无条目 = 制品未生成
+- `pushed_at`:该制品最后一次成功推送(创建/内容更新/状态流转)到 PingCode 的时间
+- `state_synced`:`card.state` 是否已同步到 PingCode。创建/流转成功 → `true`;`sync` 开关
+  关闭或流转失败但本地已判定完成 → 记录本地推导的完成态并置 `false`,待后续同步补推后翻回
 - 跳过需求关联 → `idea` 为 `null`;无中间层或跳过 → `ancestors` 为 `{}`
 - 需求挂接失败降级记录式时,`errors[]` 记一行;`idea` 字段无论挂接成败均记录
 - 单卡模式 `stories` 为 `[]`,章节全文并入 spec 卡;`task_artifact` 未配置或 tasks.md 未生成时 `tasks` 为 `[]`
