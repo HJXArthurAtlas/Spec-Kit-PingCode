@@ -5,6 +5,13 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.8.1] - 2026-09-24
+
+### Removed
+
+- 移除 `speckit.pingcode.spec2items` 别名命令:安装时它会生成一个与 `specstoissues`
+  描述完全相同的重复 skill,污染 skill 列表;主命令名不受影响
+
 ## [2.8.0] - 2026-09-24
 
 ### Changed

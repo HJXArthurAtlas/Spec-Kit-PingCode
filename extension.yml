@@ -4,7 +4,7 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.8.0"
+  version: "2.8.1"
   description: "Create PingCode requirement tree (idea → epic → feature + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
@@ -24,7 +24,6 @@ provides:
     - name: "speckit.pingcode.specstoissues"
       file: "commands/specstoissues.md"
       description: "Create PingCode cards (idea → epic → feature + user stories) from spec"
-      aliases: ["speckit.pingcode.spec2items"]
 
     - name: "speckit.pingcode.init"
       file: "commands/init.md"
