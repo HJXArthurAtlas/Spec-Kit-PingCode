@@ -4,7 +4,7 @@ schema_version: "1.0"
 extension:
   id: "pingcode"
   name: "PingCode Integration"
-  version: "2.7.1"
+  version: "2.8.0"
   description: "Create PingCode requirement tree (idea → epic → feature + user stories) from spec-kit artifacts via the pingcode CLI"
   author: "ArthurAtlas"
   repository: "https://github.com/HJXArthurAtlas/Spec-Kit-PingCode"
@@ -49,14 +49,14 @@ provides:
       required: true
 
 hooks:
-  after_plan:
+  after_specify:
     command: "speckit.pingcode.specstoissues"
     optional: true
     # hook 按 priority 升序执行(默认 10,同值按注册顺序);取 99 保证建卡排在其他
-    # after_plan hook(如 adrkit.check 的方案校验)之后,读到的是最终形态的 plan
+    # after_specify hook 之后。spec/story 制品在 specify 后即已齐备,初次建卡在此触发
     priority: 99
     prompt: "选择关联需求并创建 PingCode 卡片?"
-    description: "在 /speckit.plan 完成后可选创建 PingCode 需求树卡片(动态祖先关联)"
+    description: "在 /speckit.specify 完成后可选创建 spec/story 卡片(动态祖先关联)"
   after_tasks:
     command: "speckit.pingcode.specstoissues"
     optional: true

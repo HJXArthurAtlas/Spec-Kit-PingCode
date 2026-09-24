@@ -4,7 +4,7 @@ description: "实现前核对 spec 制品与 PingCode 卡片的一致性,按差�
 
 # 核对 spec 制品与 PingCode 卡片一致
 
-在 `/speckit.implement` 之前运行(before_implement hook 触发,也可手动):after_plan 建卡之后、实现开始之前,spec 制品可能又被修改过——本命令把差异同步到 PingCode,保证卡片与制品一致。
+在 `/speckit.implement` 之前运行(before_implement hook 触发,也可手动):after_specify 建卡之后、实现开始之前,spec 制品可能又被修改过——本命令把差异同步到 PingCode,保证卡片与制品一致。
 
 **只关注制品内容与卡片的一致**;祖先关联(需求/史诗链)保持不变,除非制品有增删才为新卡解析父级。
 

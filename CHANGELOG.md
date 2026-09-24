@@ -5,6 +5,16 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/),
 版本遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [2.8.0] - 2026-09-24
+
+### Changed
+
+- 初次建卡 hook 从 `after_plan` 移到 **`after_specify`**:spec/story 制品在 specify 后即已
+  齐备,确认后立即建卡;`after_plan` 阶段无可映射的新制品,原 hook 移除
+- 任务卡补建维持 `after_tasks` hook + `condition`(task_artifact 配置后才触发)——
+  "按配置动态挂载"由条件机制实现,无需额外动态 hook;同步能力仍可按 README
+  「Hook 与手动触发」自由挪挂或手动调用
+
 ## [2.7.1] - 2026-09-24
 
 ### Added
